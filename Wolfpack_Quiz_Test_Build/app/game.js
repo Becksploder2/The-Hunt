@@ -132,27 +132,95 @@ function draw(){
 }
 
 function setHtml(s){return '<section class="three-scene"><div class="three-controls"><strong>FULL 3D STUDIO</strong><div><button data-camera="stage">Wide Stage</button><button data-camera="close">Podium Camera</button><button data-camera="entrance">Entrance Tunnel</button><button data-camera="den">Hunter\'s Den</button></div></div><div id="stage3d" class="stage3d" aria-label="Interactive 3D game show stage"></div><p class="muted">3D prototype: modeled stage, podiums, studio lighting, tunnel entrance and Hunter\'s Den. Characters and animation are still in development.</p></section>'}
-function introHtml(s){const begin=s.phase==='builderIntro';return '<div class="card round-intro"><h2>'+(begin?'CASH BUILDER':'HEAD-TO-HEAD')+'</h2><p>'+(begin?'Each correct answer earns $1,000. Build your prize before facing any Hunter.':'You built $'+s.roundMoney.toLocaleString()+'. Next: '+esc(friends[s.round%4])+'.')+'</p><button class="primary" data-round-next="'+(begin?'builder':'qual')+'">'+(begin?'Start Cash Builder':'Bring Out the Hunter')+'</button></div>'}
-function choiceHtml(s){return '<h2>Choose your challenge</h2><p>More Hunters means a larger prize multiplier. Your base prize: $'+s.money.toLocaleString()+'.</p><div class="grid">'+[2,3,4,5].map(n=>'<div class="card"><h2>'+n+' Hunters</h2><p>Potential prize: $'+(s.money*n).toLocaleString()+'</p><button data-choose="'+n+'">Face '+n+' Hunters</button></div>').join('')+'</div>'}
-function answer(index){let s=session;if(!s||s.answered||['choice','builderIntro','qualIntro'].includes(s.phase))return;s.answered=true;let good=s.q.opts[+index]===s.q.a;s.lastCorrect=good;if(window.wolfAudio)window.wolfAudio.answer(good);document.querySelectorAll('[data-answer]').forEach(btn=>{const correct=s.q.opts[Number(btn.dataset.answer)]===s.q.a;btn.classList.add(correct?'answer-correct':'answer-wrong');btn.disabled=true});if(s.phase==='builder'){
- s.builderCount++;
- if(good){s.roundMoney+=1000;s.score++}else s.miss++;
- s.log=good?'Correct! +$1,000':'Incorrect. Answer: '+s.q.a;
- if(s.mode==='btw'){
-   if(!good&&s.builderCount===1){end('First Cash Builder answer missed. Episode over.');return}
-   if(!good||s.builderCount>=5){s.money=s.roundMoney;s.phase='choice';s.answered=false;draw();return}
+
+function introHtml(s){
+ const first=s.phase==='builderIntro';
+ return '<div class="card round-intro"><h2>'+(first?'CASH BUILDER':'HEAD-TO-HEAD')+'</h2><p>'+(first?'Answer as many questions as possible in '+showConfig.builderSeconds+' seconds. Every correct answer is worth $1,000.':'You earned $'+s.roundMoney.toLocaleString()+'. '+esc(selectedHunter(s.round))+' is ready with three offers.')+'</p><button class="primary" data-round-next="'+(first?'builder':'offers')+'">'+(first?'Start Cash Builder':'Meet the Hunter')+'</button></div>';
+}
+function choiceHtml(s){
+ return '<h2>Choose your challenge</h2><p>Face between one and five Wolfpack Hunters. Your Cash Builder stake is $'+s.money.toLocaleString()+'.</p><div class="offer-grid">'+[1,2,3,4,5].map(n=>'<div class="card"><h2>'+n+' Hunter'+(n===1?'':'s')+'</h2><p>Potential prize: $'+(Math.max(1000,s.money)*n).toLocaleString()+'</p><p>Hunter clock: '+(45+Math.max(0,5-n)*10)+' seconds</p><button data-choose="'+n+'">Face '+n+' Hunter'+(n===1?'':'s')+'</button></div>').join('')+'</div>';
+}
+function endQualifier(won){
+ const s=session;if(won){s.survivors++;s.money+=s.offer;}
+ s.roundResults.push({name:contestants[s.round]?.name||'Contestant',won,offer:s.offer});
+ s.round++;s.roundMoney=0;
+ if(s.round>=4){
+  if(s.survivors===0){s.allCaught=true;s.money=4000}
+  s.phase='final';advance();return;
  }
- nextTurn();return
-}if(s.phase==='qual'){if(good)s.score++;else s.opp++;s.log=good?'Correct!':`Incorrect. Answer: ${s.q.a}. The Hunter advances.`;if(s.score>=3||s.opp>=3){let won=s.score>=3;if(won){s.survivors++;s.money+=s.roundMoney}s.roundMoney=0;s.log=won?'Contestant qualified!':'Contestant eliminated.';s.round++;if(s.round >=4){if(s.survivors===0){end('No contestants survived. The Wolfpack wins this episode.');return}s.phase='final';advance();return}s.phase='builderIntro';advance();return}nextTurn();return}if(good)s.score++;else s.opp++;s.log=good?'Correct!':`Incorrect. Answer: ${s.q.a}. The opposition scores.`;let target=s.phase==='final'?5:6;if(s.score>=target||s.opp>=target){finish(s.score>=target);return}nextTurn()}
-function nextTurn(){let s=session;s.answered=false;s.q=nextQ();draw()}
-function finish(win){stop();if(window.wolfAudio)window.wolfAudio.result(win);let s=session;if(!s)return;let phase=s.phase;if(win&&phase==='final'&&s.mode==='trials'){unlocked=true;save('wolf_unlocked',true)}if(win&&phase==='duel')s.money*=s.opponents;stats.shows++;if(win){stats.wins++;stats.earnings+=s.money}save('wolf_stats',stats);end(win?phase==='final'&&s.mode==='trials'?'YOU DEFEATED THE RAVEN! Become a Hunter is now unlocked.':`VICTORY! ${phase==='duel'?'Prize won: $'+s.money.toLocaleString():phase==='final'?'You defeated The Raven!':'You won the showdown!'}`:`DEFEAT. ${phase==='final'?'The Raven wins Face the Raven.':'The Wolfpack takes the round.'}`)}
-function end(msg){stop();if(window.wolfAudio)window.wolfAudio.stop();let s=session;session=null;screen='result';shell(`<p class="eyebrow">Round complete</p><h1>${esc(msg)}</h1><div class="card"><p>Thanks for testing this early gameplay build. You can play another show or edit the question bank.</p><div class="btnrow"><button class="primary" data-go="home">Back to Main Menu</button><button data-go="create">Create Studio</button></div></div>`)}
+ s.phase='builderIntro';advance();
+}
+function answer(index){
+ const s=session;if(!s||s.answered||['choice','offers','builderIntro','qualIntro'].includes(s.phase))return;
+ const good=s.q.opts[+index]===s.q.a;
+ s.answered=true;s.lastCorrect=good;
+ if(window.wolfAudio)window.wolfAudio.answer(good);
+ if(document.querySelectorAll)document.querySelectorAll('[data-answer]').forEach(btn=>{const correct=s.q.opts[Number(btn.dataset.answer)]===s.q.a;btn.classList.add(correct?'answer-correct':'answer-wrong');btn.disabled=true});
+ if(s.phase==='builder'){
+  s.builderCount++;
+  if(good){s.roundMoney+=1000;s.score++;}else s.miss++;
+  s.log=good?'Correct! +$1,000':'Wrong: '+s.q.a;
+  if(s.mode==='btw'&&!good){
+   if(s.builderCount===1){end('First Cash Builder answer missed — Beat the Wolfpack episode over.');return}
+   s.phase='choice';s.money=s.roundMoney;advance();return;
+  }
+  if(s.mode==='btw'&&s.builderCount>=5){s.money=s.roundMoney;s.phase='choice';advance();return}
+  nextTurn();return;
+ }
+ if(s.phase==='qual'){
+  if(good)s.playerStep=Math.min(6,s.playerStep+1);
+  else if(Math.random()<.75)s.hunterStep=Math.min(6,s.hunterStep+1);
+  s.log=good?'Contestant advances toward home!':selectedHunter(s.round)+' takes a step closer.';
+  if(s.playerStep>=6){endQualifier(true);return}
+  if(s.hunterStep>=s.playerStep){endQualifier(false);return}
+  nextTurn();return;
+ }
+ if(s.phase==='final'){
+  if(good)s.score++;
+  s.log=good?'Team scores!':'Incorrect — '+s.q.a;
+  nextTurn();return;
+ }
+ if(s.phase==='pushback'){
+  if(good){s.opp=Math.max(0,s.opp-1);s.pushbacks++;s.log='Successful pushback! The Raven moves back one step.';}
+  else s.log='Pushback missed. The Raven remains on '+s.opp+'.';
+  s.phase='finalHunter';s.turn='hunter';s.answered=false;s.q=nextQ();draw();startTimer();return;
+ }
+ if(s.phase==='duel'){
+  if(s.turn!=='player')return;
+  if(good)s.score++;
+  s.log=good?'Correct! Your clock stops. The Hunters now answer.':'Incorrect. Your clock continues until you answer correctly.';
+  if(good){s.turn='hunter';s.aiDelay=0;}
+  nextTurn();return;
+ }
+ if(s.phase==='hunter'){
+  if(good)s.score++;else s.opp++;
+  s.log=good?'Hunter correct!':'Opponent makes progress.';
+  nextTurn();return;
+ }
+}
+function nextTurn(){const s=session;if(!s)return;s.answered=false;s.q=nextQ();draw()}
+function finish(win){
+ stop();const s=session;if(!s)return;
+ if(window.wolfAudio)window.wolfAudio.result(win);
+ if(win&&s.mode==='trials'&&['final','finalHunter'].includes(s.phase)){unlocked=true;save('wolf_unlocked',true)}
+ if(win&&s.phase==='duel')s.money=Math.max(1000,s.money)*s.opponents;
+ stats.shows++;if(win){stats.wins++;stats.earnings+=s.money}save('wolf_stats',stats);
+ const amount=win?'$'+s.money.toLocaleString():'$0';
+ const split=win&&(s.phase==='final'||s.phase==='finalHunter')?(s.allCaught?' · $1,000 for each of the four original contestants':' · $'+Math.floor(s.money/s.survivors).toLocaleString()+' per surviving contestant'):'';
+ end((win?'VICTORY — ':'DEFEAT — ')+(win?(s.mode==='trials'?'The Raven defeated! Become a Hunter unlocked. ':'Prize won: '+amount+split):'The Wolfpack wins.'));
+}
+function end(msg){
+ stop();stopImportedMusic();if(window.wolfAudio)window.wolfAudio.stop();
+ session=null;screen='result';
+ shell('<p class="eyebrow">Round complete</p><h1>'+esc(msg)+'</h1><div class="card"><p>Play another show, edit your contestants, or review the rules.</p><div class="btnrow"><button class="primary" data-go="home">Main Menu</button><button data-go="create">Create Studio</button></div></div>');
+}
+
 function hostEditor(){const options=(id,values,selected)=>`<select id="host_${id}">${values.map(v=>`<option value="${esc(v)}" ${v===selected?'selected':''}>${esc(v)}</option>`).join('')}</select>`;shell(`<p class="eyebrow">Available from the start · Host Studio</p><h1>Create a Host</h1><p class="sub">Keep Arianna Dawson and customize her look, or give your host a new identity. Appearance settings are saved locally.</p><div class="grid"><section class="card"><span class="pill">ACTIVE HOST</span><h2>${esc(host.name)}</h2><div class="host-avatar"><div class="host-hair">${host.hair.includes('Red')?'🦰':'👩'}</div><strong>${esc(host.name)}</strong><span>${esc(host.glasses)} · ${esc(host.braces)}</span><small>Placeholder portrait · no 3D model in this alpha</small></div></section><section class="card"><h2>Edit Host</h2><label>Host Name<input id="host_name" maxlength="60" value="${esc(host.name)}"></label><label>Hair Color${options('hair',['Copper Red','Bright Red','Auburn','Dark Brown','Blonde','Black'],host.hair)}</label><label>Hair Style${options('style',['Long Waves','Straight','Ponytail','Bob','Curly'],host.style)}</label><label>Glasses${options('glasses',['Black Frames','Orange Frames','Silver Frames','No Glasses'],host.glasses)}</label><label>Braces${options('braces',['Visible Silver','Orange Bands','Clear Brackets','No Braces'],host.braces)}</label><label>Outfit${options('outfit',['Black Blazer / Orange Shirt','Orange Jacket / Black Shirt','White Blazer / Black Shirt','Black Evening Dress','Orange Evening Dress'],host.outfit)}</label><div class="btnrow"><button class="primary" id="saveHost">Save Host</button><button id="resetHost">Restore Original Arianna</button></div></section></div>`)}
 function create(){
  const cards=hunterProfiles.map((p,i)=>'<div class="hunter-profile '+(i===4?'leader-profile':'')+'"><div class="hunter-title">'+esc(p.title)+'</div><strong>'+esc(p.name)+'</strong><small>'+esc(p.theme)+' · '+esc(p.show)+'</small><span class="muted">'+esc(p.music)+'</span></div>').join('');
  shell('<p class="eyebrow">Creation tools · Alpha</p><h1>Create Studio</h1><h2>Official Hunters</h2><p class="sub">Five confirmed Hunters. Eric is credited by first name only. The Raven is the Wolfpack leader.</p><div class="hunter-roster">'+cards+'</div><div class="grid"><div class="card"><h2>Hunter Entrance Music</h2><p>Scarlett\'s Fight Raiders Fight and Karli\'s Texas Fight are assigned to The Hunt only. No fight-song recordings are bundled. Use Music Importer to load tracks for this session. The Hunt plays imported Hunter themes at the Head-to-Head introduction.</p><p>El Jefe (Eric), The Jet (Justin), and The Raven use original planned themes.</p></div><div class="card"><h2>Question Creator</h2><p>Current questions: <b>'+questions.length+'</b></p><label>Question<input id="qtext" placeholder="Your trivia question"></label><label>Correct answer<input id="qanswer" placeholder="Correct answer"></label><label>Wrong answer 1<input id="wrong1"></label><label>Wrong answer 2<input id="wrong2"></label><label>Wrong answer 3<input id="wrong3"></label><button id="addQuestion">Add Question</button><div class="btnrow"><button id="exportQuestions">Export JSON</button><label class="pill">Import JSON<input type="file" id="importQuestions" accept="application/json,.json"></label></div><button id="resetQuestions">Reset Sample Questions</button></div></div><div class="card" style="margin-top:16px"><h2>Character & Show Studio</h2><div class="btnrow"><button data-go="host">Create a Host — Available</button><button data-go="contestants">Create a Contestant</button><button data-go="show">Create a Show</button><button data-go="music">Music Importer</button><button data-go="records">Records</button><button disabled>Create a Hunter Appearance — Coming Soon</button></div></div>');
 }
 function validQuestion(x){return x&&typeof x.q==='string'&&typeof x.a==='string'&&Array.isArray(x.opts)&&x.opts.length===4&&x.opts.every(y=>typeof y==='string')&&x.opts.includes(x.a)}
-document.addEventListener('click',e=>{let b=e.target.closest('button');if(!b)return;if(b.dataset.go){go(b.dataset.go);return}if(b.dataset.start){start(b.dataset.start);return}if(b.dataset.roundNext){session.phase=b.dataset.roundNext;advance();return}if(b.dataset.camera){if(window.wolfStage)window.wolfStage.setView(b.dataset.camera);return}if(b.dataset.answer!==undefined){answer(b.dataset.answer);return}if(b.dataset.choose){session.opponents=+b.dataset.choose;session.phase='duel';advance();return}if(b.id==='nextContestant'){saveContestant();if(contestantIndex<3){contestantIndex++;contestantEditor()}else go('create');return}if(b.id==='previousContestant'){saveContestant();contestantIndex=Math.max(0,contestantIndex-1);contestantEditor();return}if(b.id==='saveShow'){showConfig={hunterSelection:document.getElementById('showSelection').value,builderSeconds:+document.getElementById('builderSeconds').value};save('wolf_showConfig',showConfig);go('create');return}if(b.dataset.preview){stopImportedMusic();const a=importedTracks[b.dataset.preview];if(a){musicPlaying=a;a.currentTime=0;a.play().catch(()=>{})}return}if(b.id==='toggleAudio'){if(window.wolfAudio)window.wolfAudio.toggle();return}if(b.id==='saveHost'){host={name:document.getElementById('host_name').value.trim()||'Arianna Dawson',hair:document.getElementById('host_hair').value,style:document.getElementById('host_style').value,glasses:document.getElementById('host_glasses').value,braces:document.getElementById('host_braces').value,outfit:document.getElementById('host_outfit').value};save('wolf_host',host);hostEditor();return}if(b.id==='resetHost'){if(confirm('Restore Arianna Dawson to her original appearance?')){host={...ariDefault};save('wolf_host',host);hostEditor()}return}if(b.id==='addQuestion'){let ids=['qtext','qanswer','wrong1','wrong2','wrong3'];let vals=ids.map(x=>document.getElementById(x).value.trim());if(vals.some(x=>!x)||new Set(vals.slice(1).map(x=>x.toLowerCase())).size!==4){alert('Enter a question and four different answers.');return}questions.push({q:vals[0],a:vals[1],opts:vals.slice(1)});save('wolf_questions',questions);create();return}if(b.id==='resetQuestions'){if(confirm('Replace all questions with the sample bank?')){questions=base;save('wolf_questions',questions);create()}return}if(b.id==='exportQuestions'){let blob=new Blob([JSON.stringify(questions,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='wolfpack-questions.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),2000)}});
+document.addEventListener('click',e=>{let b=e.target.closest('button');if(!b)return;if(b.dataset.go){go(b.dataset.go);return}if(b.dataset.start){start(b.dataset.start);return}if(b.dataset.roundNext){session.phase=b.dataset.roundNext;advance();return}if(b.dataset.offer!==undefined){const offer=session.offers[Number(b.dataset.offer)];if(!offer)return;session.offer=offer.money;session.offerStep=offer.step;session.phase='qual';advance();return}if(b.dataset.camera){if(window.wolfStage)window.wolfStage.setView(b.dataset.camera);return}if(b.dataset.answer!==undefined){answer(b.dataset.answer);return}if(b.dataset.choose){session.opponents=+b.dataset.choose;session.phase='duel';advance();return}if(b.id==='nextContestant'){saveContestant();if(contestantIndex<3){contestantIndex++;contestantEditor()}else go('create');return}if(b.id==='previousContestant'){saveContestant();contestantIndex=Math.max(0,contestantIndex-1);contestantEditor();return}if(b.id==='saveShow'){showConfig={hunterSelection:document.getElementById('showSelection').value,builderSeconds:+document.getElementById('builderSeconds').value};save('wolf_showConfig',showConfig);go('create');return}if(b.dataset.preview){stopImportedMusic();const a=importedTracks[b.dataset.preview];if(a){musicPlaying=a;a.currentTime=0;a.play().catch(()=>{})}return}if(b.id==='toggleAudio'){if(window.wolfAudio)window.wolfAudio.toggle();return}if(b.id==='saveHost'){host={name:document.getElementById('host_name').value.trim()||'Arianna Dawson',hair:document.getElementById('host_hair').value,style:document.getElementById('host_style').value,glasses:document.getElementById('host_glasses').value,braces:document.getElementById('host_braces').value,outfit:document.getElementById('host_outfit').value};save('wolf_host',host);hostEditor();return}if(b.id==='resetHost'){if(confirm('Restore Arianna Dawson to her original appearance?')){host={...ariDefault};save('wolf_host',host);hostEditor()}return}if(b.id==='addQuestion'){let ids=['qtext','qanswer','wrong1','wrong2','wrong3'];let vals=ids.map(x=>document.getElementById(x).value.trim());if(vals.some(x=>!x)||new Set(vals.slice(1).map(x=>x.toLowerCase())).size!==4){alert('Enter a question and four different answers.');return}questions.push({q:vals[0],a:vals[1],opts:vals.slice(1)});save('wolf_questions',questions);create();return}if(b.id==='resetQuestions'){if(confirm('Replace all questions with the sample bank?')){questions=base;save('wolf_questions',questions);create()}return}if(b.id==='exportQuestions'){let blob=new Blob([JSON.stringify(questions,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='wolfpack-questions.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),2000)}});
 document.addEventListener('change',async e=>{if(e.target.dataset.music){const file=e.target.files?.[0];if(!file)return;if(file.size>30000000){alert('30 MB maximum');return}const key=e.target.dataset.music,old=importedTracks[key];if(old){old.pause();URL.revokeObjectURL(old.src)}importedTracks[key]=new Audio(URL.createObjectURL(file));musicEditor();return}if(e.target.id!=='importQuestions')return;try{let arr=JSON.parse(await e.target.files[0].text());if(!Array.isArray(arr)||!arr.length||!arr.every(validQuestion))throw Error('Invalid question format');questions=arr;save('wolf_questions',questions);create();alert(`Imported ${questions.length} questions.`)}catch(err){alert('Import failed: '+err.message)}});
 render();
