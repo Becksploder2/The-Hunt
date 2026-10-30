@@ -97,3 +97,14 @@ textarea{min-height:95px}
 .stage3d canvas{width:100%!important;height:100%!important;display:block}
 .three-scene>.muted{padding:0 14px 12px;color:white}
 @media(max-width:650px){.stage3d{height:265px}}
+
+/* Chase-style gameplay HUD only. The 3D stage and Den geometry are unchanged. */
+.offer-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(205px,1fr));gap:14px;margin:16px 0}
+.offer-grid .card{display:flex;flex-direction:column;gap:10px;align-items:stretch}
+.offer-grid .card strong{font-size:26px;color:#fff;font-variant-numeric:tabular-nums}
+.chase-track{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px;min-height:100px;margin:15px 0}
+.track-cell{min-width:0;padding:15px 2px;text-align:center;display:flex;align-items:center;justify-content:center;background:#191919;border:2px solid #777;color:#fff;font-size:12px;font-weight:800;overflow-wrap:anywhere}
+.track-cell.player-cell{border-color:#ff7900;background:#a24c00;color:#fff}
+.track-cell.hunter-cell{box-shadow:inset 0 0 0 3px #e53232;background:#711313;color:#fff}
+.track-cell.player-cell.hunter-cell{background:linear-gradient(140deg,#a24c00 50%,#711313 50%)}
+@media(max-width:620px){.chase-track{gap:2px}.track-cell{font-size:10px;padding:10px 1px}}
