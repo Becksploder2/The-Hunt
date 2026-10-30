@@ -6,12 +6,15 @@
   "main": "main.js",
   "scripts": {
     "start": "electron .",
-    "dist:win": "electron-builder --win nsis portable --publish never",
-    "dist:mac": "electron-builder --mac dmg --publish never"
+    "dist:win": "npm run build:stage && electron-builder --win nsis portable --publish never",
+    "dist:mac": "npm run build:stage && electron-builder --mac dmg --publish never",
+    "build:stage": "esbuild app/stage3d.js --bundle --format=iife --platform=browser --outfile=app/stage3d.bundle.js"
   },
   "devDependencies": {
     "electron": "^33.4.11",
-    "electron-builder": "^25.1.8"
+    "electron-builder": "^25.1.8",
+    "three": "^0.171.0",
+    "esbuild": "^0.25.0"
   },
   "build": {
     "appId": "com.wolfpackstudios.quizgames",
@@ -19,7 +22,8 @@
     "files": [
       "main.js",
       "app/**/*",
-      "package.json"
+      "package.json",
+      "app/stage3d.bundle.js"
     ],
     "directories": {
       "output": "dist"
