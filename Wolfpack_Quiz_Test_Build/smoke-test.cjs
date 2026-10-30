@@ -27,6 +27,9 @@ assert.ok(!output.includes('Eric Herrera'),'Eric should be credited by first nam
 assert.ok(output.includes('Fight Raiders Fight'),'Scarlett music assignment missing');
 verify('CASH BUILDER','start("hunt")');
 assert.ok(output.includes('stage3d'),'The Hunt 3D stage container failed to render');
+assert.ok(output.includes('Start Cash Builder'),'Cash Builder opening step missing');
+vm.runInContext('session.phase="builder";advance()',context,{timeout:3000});
+assert.ok(output.includes('Which')||output.includes('question'),'Cash Builder questions did not start');
 verify('FACE THE RAVEN','session.phase="final";advance()');
 verify('BEAT THE WOLFPACK','start("btw")');
 assert.ok(output.includes('Hunter&#39;s Den')||output.includes("Hunter's Den"),'Hunter Den view missing');
