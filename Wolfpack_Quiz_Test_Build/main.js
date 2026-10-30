@@ -4,7 +4,7 @@ const fs = require('fs');
 const path = require('path');
 
 // Conservative graphics mode helps avoid blank windows on troublesome GPU drivers.
-app.disableHardwareAcceleration();
+// Hardware acceleration is enabled for the 3D WebGL studio.
 let mainWindow;
 function record(message) {
   try {
