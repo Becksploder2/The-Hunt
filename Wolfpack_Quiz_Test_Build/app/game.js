@@ -33,10 +33,104 @@ function shell(html){app.innerHTML=`<header><b>🐺 <span class="logo">WOLFPACK<
 function go(s){stop();stopImportedMusic();if(window.wolfStage)window.wolfStage.destroy();if(window.wolfAudio)window.wolfAudio.stop();screen=s;session=null;render()}
 function render(){if(screen==='host')return hostEditor();if(screen==='contestants')return contestantEditor();if(screen==='show')return showEditor();if(screen==='music')return musicEditor();if(screen==='records')return recordScreen();if(screen==='credits')return creditsScreen();if(screen==='home')return home();if(screen==='create')return create();if(screen==='about')return shell('<p class="eyebrow">Wolfpack Studios · Alpha 0.1</p><h1>About this prototype</h1><div class="card">Original game-show test mechanics, placeholder Hunter names, and a local question editor. The Raven is the exclusive Face the Raven finale opponent in The Hunt and one of six Hunters in Beat the Wolfpack. All progress is saved locally on this computer. This build has original synthesized sound cues and prototype music, but no recorded soundtrack, character models, voice acting, cinematic entrances, or finished 3D sets yet.</div>');if(screen==='play')return draw()}
 function home(){shell(`<p class="eyebrow">Wolfpack Studios · First playable prototype</p><h1>Choose your show.</h1><p class="sub">Hosted by ${esc(host.name)}. Two original trivia competitions and five Wolfpack Hunters.</p><div class="grid"><section class="card gold"><span class="pill">TEAM COMPETITION</span><h2>THE HUNT</h2><p>Four contestants build their prize fund and face individual Hunters. Survivors advance to <b>Face the Raven</b>.</p><button class="primary" data-start="hunt">Play The Hunt</button></section><section class="card red"><span class="pill">SOLO COMPETITION</span><h2>BEAT THE WOLFPACK</h2><p>Build a prize, select your opposition, and outlast the Hunters in a timed quiz battle.</p><button class="primary" data-start="btw">Play Beat the Wolfpack</button></section><section class="card"><span class="pill">CAREER CHALLENGE</span><h2>WOLFPACK TRIALS</h2><p>Four contestants face four separate Hunters. The survivors must defeat The Raven to unlock Become a Hunter.</p><button data-start="trials">Begin Trials</button></section><section class="card ${unlocked?'gold':'lock'}"><span class="pill">${unlocked?'UNLOCKED':'LOCKED'}</span><h2>BECOME A HUNTER</h2><p>${unlocked?'Play from the Hunter side and stop the contestants.':'Defeat The Raven in the Wolfpack Trials to unlock.'}</p><button data-start="hunter" ${unlocked?'':'disabled'}>${unlocked?'Play as a Hunter':'🔒 Locked'}</button></section></div>`)}
-function start(mode){stop();session={mode,phase:mode==='hunter'?'hunter':'builderIntro',round:0,qi:Math.floor(Math.random()*questions.length),money:0,roundMoney:0,builderCount:0,survivors:0,won:0,miss:0,score:0,opp:0,clock:60,oppclock:60,turn:'player',opponents:2,log:'',q:null,answered:false};if(mode==='hunter'){session.phase='hunter';session.clock=60;session.oppclock=60;}screen='play';if(window.wolfAudio)window.wolfAudio.start(mode);advance()}
-function advance(){stop();let s=session;s.answered=false;s.q=nextQ();if(s.phase==='builderIntro'){s.roundMoney=0;s.builderCount=0;s.score=0;s.log='Contestant '+(s.round+1)+': build cash before facing a Hunter.';draw();return;}if(s.phase==='qualIntro'){playHunterTheme();s.log='Cash Builder complete: $'+s.roundMoney.toLocaleString()+'. Prepare to face '+selectedHunter(s.round)+'.';draw();return;}if(s.phase==='qual'){s.clock=45;s.score=0;s.opp=0;s.log=`Contestant ${s.round+1} faces ${esc(selectedHunter(s.round))}. First to 3 correct answers wins.`}else if(s.phase==='builder'){s.clock=showConfig.builderSeconds;s.score=0;s.miss=0;s.builderCount=0;s.roundMoney=0;s.log=s.mode==='btw'?'Beat the Wolfpack Cash Builder: each correct answer adds $1,000. A wrong answer ends the round.':'Contestant '+(s.round+1)+' of '+(4)+' — Cash Builder. Answer questions until the Cash Builder timer expires. Every correct answer earns $1,000.'}else if(s.phase==='final'){s.clock=75;s.oppclock=75;s.turn='player';s.log=`FACE THE RAVEN! ${s.survivors} survivor${s.survivors===1?'':'s'}. Start with a head start equal to the number of surviving contestants. Reach 5 before The Raven.`;s.score=s.survivors;s.opp=0}else if(s.phase==='duel'){s.clock=70;s.oppclock=70;s.turn='player';s.score=0;s.opp=0;s.log=`Beat ${s.opponents} Hunters from the five-member Wolfpack lineup, including The Raven. First to 6 correct answers wins. Each mistake gives the Hunters a chance.`}else if(s.phase==='hunter'){s.clock=60;s.oppclock=60;s.score=0;s.opp=0;s.log='Play as a Hunter! Answer six questions correctly before the AI contestant.'}draw();if(['final','duel','hunter','builder'].includes(s.phase))startTimer()}
-function startTimer(){stop();tick=setInterval(()=>{if(!session)return;let s=session;if(s.phase==='builder'||s.turn==='player')s.clock--;else s.oppclock--;const el=document.getElementById('timer');if(el)el.textContent=`Your clock: ${s.clock}s · Opponent: ${s.oppclock}s`;if(s.phase==='builder'){if(s.clock<=0){if(s.mode==='btw'){s.money=s.roundMoney;s.phase='choice';stop();draw()}else{s.phase='qualIntro';advance()}return}}else if(s.clock<=0||s.oppclock<=0)finish(s.oppclock<=0);},1000)}
-function draw(){let s=session;if(!s)return home();let heading=s.mode==='hunt'?'THE HUNT':s.mode==='btw'?'BEAT THE WOLFPACK':s.mode==='trials'?'WOLFPACK TRIALS':'BECOME A HUNTER';let phase=s.phase==='qual'?`Qualifier ${s.round+1}/${4}`:['builder','builderIntro'].includes(s.phase)?'Cash Builder':s.phase==='final'?'FACE THE RAVEN':s.phase==='duel'?'Wolfpack Showdown':'Hunter Challenge';shell(`<p class="eyebrow">${heading} · ${phase}</p><h1>${phase}</h1><div class="status"><span>Prize: $${s.money.toLocaleString()}</span><span>Correct: ${s.score}</span><span>Opponent: ${s.opp}</span><span>Qualified: ${s.survivors}</span><span id="timer">Your clock: ${s.clock}s · Opponent: ${s.oppclock}s</span></div><div class="message">${s.log}</div>${setHtml(s)}${['builderIntro','qualIntro'].includes(s.phase)?introHtml(s):s.phase==='choice'?choiceHtml(s):`<div class="question">${esc(s.q.q)}</div><div class="answers">${s.q.opts.map((a,i)=>`<button data-answer="${i}">${esc(a)}</button>`).join('')}</div><p class="muted">Sample question bank for prototype testing. Timed battles continue until a side reaches its target or a clock expires.</p>`}`);if(window.wolfStage){window.wolfStage.render(s.mode==='btw'?'btw':'hunt');window.wolfStage.updateDen(s.q?.q,s.lastCorrect)}}
+
+function start(mode){
+ stop();stopImportedMusic();
+ session={mode,phase:mode==='hunter'?'hunter':'builderIntro',round:0,qi:Math.floor(Math.random()*questions.length),
+ money:0,roundMoney:0,builderCount:0,survivors:0,score:0,opp:0,clock:60,oppclock:60,
+ turn:'player',opponents:2,selectedHunters:[],offer:0,playerStep:0,hunterStep:0,
+ finalStage:'team',pushbacks:0,headStart:0,allCaught:false,log:'',q:null,answered:false,
+ lastCorrect:null,roundResults:[],finalTeamSet:[],finalHunterSet:[]};
+ screen='play';if(window.wolfAudio)window.wolfAudio.start(mode);advance();
+}
+function advance(){
+ stop();const s=session;if(!s)return;s.answered=false;s.lastCorrect=null;s.q=nextQ();
+ if(s.phase==='builderIntro'){
+  s.builderCount=0;s.roundMoney=0;s.score=0;s.clock=showConfig.builderSeconds;
+  s.log=s.mode==='btw'?'One contestant. Your first wrong answer ends the episode; later misses end the Cash Builder.':'Contestant '+(s.round+1)+' — earn money in the Cash Builder before meeting a Hunter.';
+ }else if(s.phase==='builder'){
+  s.clock=showConfig.builderSeconds;s.builderCount=0;s.roundMoney=0;s.score=0;s.log='Cash Builder: $1,000 for every correct answer.';
+ }else if(s.phase==='qualIntro'){
+  s.log='Cash Builder complete: $'+s.roundMoney.toLocaleString()+'. '+selectedHunter(s.round)+' approaches the table.';
+  playHunterTheme();
+ }else if(s.phase==='offers'){
+  let base=Math.max(1000,s.roundMoney);
+  s.offers=[{label:'LOW OFFER',money:Math.max(1000,Math.round(base*.4/1000)*1000),step:1},
+   {label:'MIDDLE OFFER',money:s.roundMoney,step:2},
+   {label:'HIGH OFFER',money:Math.max(5000,Math.round(base*3/1000)*1000),step:3}];
+  s.log=selectedHunter(s.round)+' offers three positions on the board. High offer: more money, one fewer step from being caught.';
+ }else if(s.phase==='qual'){
+  s.clock=0;s.score=0;s.opp=0;s.playerStep=s.offerStep||2;s.hunterStep=0;
+  s.log=selectedHunter(s.round)+' vs '+contestants[s.round].name+'. Answer correctly to move your money down the board. The Hunter advances on correct answers.';
+ }else if(s.phase==='final'){
+  s.finalStage='team';s.clock=120;s.oppclock=120;s.score=s.survivors;s.headStart=s.survivors;s.opp=0;s.pushbacks=0;s.turn='player';
+  s.log='FACE THE RAVEN — '+s.survivors+' survivor(s), '+s.headStart+' point head start. Team plays first for 120 seconds.';
+ }else if(s.phase==='finalHunter'){
+  s.finalStage='hunter';s.turn='hunter';s.oppclock=120;
+  s.log='THE RAVEN CHASES — Target '+s.score+'. Each wrong answer gives the team a pushback opportunity.';
+ }else if(s.phase==='pushback'){
+  s.turn='player';s.log='PUSHBACK CHANCE! Answer correctly to push The Raven back one step.';
+ }else if(s.phase==='choice'){
+  s.money=s.roundMoney;s.log='Choose how many Hunters to face. More Hunters offer more money and a tougher clock.';
+ }else if(s.phase==='duel'){
+  s.clock=60;s.oppclock=45+Math.max(0,5-s.opponents)*10;s.turn='player';s.score=0;s.opp=0;
+  s.selectedHunters=selectWolfpackHunters(s.opponents);
+  s.log='Beat '+s.opponents+' Hunters: '+s.selectedHunters.join(', ')+'. Clocks alternate after each answer. First clock to zero loses.';
+ }else if(s.phase==='hunter'){
+  s.clock=60;s.oppclock=60;s.turn='player';s.score=0;s.opp=0;s.log='Become a Hunter — answer questions before the opposing contestant.';
+ }
+ draw();if(['builder','final','finalHunter','duel','hunter'].includes(s.phase))startTimer();
+}
+function selectWolfpackHunters(n){
+ const lineup=[...friends,'The Raven'];
+ return lineup.slice(0,Math.max(1,Math.min(5,n)));
+}
+function startTimer(){
+ stop();
+ tick=setInterval(()=>{
+  const s=session;if(!s)return;
+  if(s.phase==='builder')s.clock--;
+  else if(s.phase==='duel'){if(s.turn==='player')s.clock--;else s.oppclock--;}
+  else if(s.phase==='final')s.clock--;
+  else if(s.phase==='finalHunter')s.oppclock--;
+  else if(s.phase==='hunter'){if(s.turn==='player')s.clock--;else s.oppclock--;}
+  else return;
+  const el=document.getElementById('timer');
+  if(el)el.textContent=s.phase==='builder'?'Cash Builder: '+s.clock+'s':'Contestant: '+s.clock+'s · Hunters: '+s.oppclock+'s';
+  if(s.phase==='builder'&&s.clock<=0){finishBuilder();return}
+  if(s.phase==='final'&&s.clock<=0){s.phase='finalHunter';advance();return}
+  if(s.phase==='finalHunter'&&s.oppclock<=0){finish(true);return}
+  if(s.phase==='duel'&&(s.clock<=0||s.oppclock<=0)){finish(s.oppclock<=0);return}
+  if(s.phase==='hunter'&&(s.clock<=0||s.oppclock<=0)){finish(s.oppclock<=0);return}
+ },1000);
+}
+function finishBuilder(){
+ const s=session;if(!s)return;stop();
+ if(s.mode==='btw'){
+  if(s.builderCount===0){end('Cash Builder expired without an answer. Episode over.');return}
+  s.money=s.roundMoney;s.phase='choice';advance();
+ }else{s.phase='qualIntro';advance()}
+}
+function gamePanel(s){
+ if(s.phase==='offers'){
+  return '<h2>Hunter Offers</h2><div class="offer-grid">'+s.offers.map((o,i)=>'<div class="card"><h3>'+o.label+'</h3><strong>$'+o.money.toLocaleString()+'</strong><p>Starting position: '+o.step+' steps from home</p><button data-offer="'+i+'">Accept Offer</button></div>').join('')+'</div>';
+ }
+ if(s.phase==='qual')return '<div class="card"><h2>Head-to-Head Board</h2><div class="chase-track">'+Array.from({length:7},(_,i)=>'<div class="track-cell '+(s.playerStep===i?'player-cell ':'')+(s.hunterStep===i?'hunter-cell':'')+'">'+(s.playerStep===i?'$'+s.offer.toLocaleString():'')+(s.hunterStep===i?' ◆':'')+'</div>').join('')+'</div><p>Money moves toward HOME. Red Hunter marker follows when the Hunter answers correctly.</p></div>';
+ if(['final','finalHunter','pushback'].includes(s.phase))return '<div class="card"><h2>'+ (s.phase==='final'?'TEAM FINAL CHASE':s.phase==='pushback'?'PUSHBACK':'THE RAVEN IS CHASING')+'</h2><p>Team score: '+s.score+' · Raven score: '+s.opp+' · Pushbacks: '+s.pushbacks+'</p><p>Head start: '+s.headStart+'</p></div>';
+ if(s.phase==='duel')return '<div class="card"><h2>Wolfpack Clock Battle</h2><p>'+s.selectedHunters.map(esc).join(' · ')+'</p><p>Contestant: '+s.clock+' seconds · Hunters: '+s.oppclock+' seconds · Turn: '+s.turn+'</p></div>';
+ return '';
+}
+function draw(){
+ const s=session;if(!s)return home();
+ const heading=s.mode==='hunt'?'THE HUNT':s.mode==='btw'?'BEAT THE WOLFPACK':s.mode==='trials'?'WOLFPACK TRIALS':'BECOME A HUNTER';
+ const phase=({builderIntro:'Cash Builder',builder:'Cash Builder',qualIntro:'Hunter Entrance',offers:'Hunter Offers',qual:'Head-to-Head',final:'FACE THE RAVEN',finalHunter:'FACE THE RAVEN',pushback:'Pushback',choice:'Choose Hunters',duel:'Wolfpack Showdown',hunter:'Hunter Challenge'})[s.phase]||s.phase;
+ const isIntro=['builderIntro','qualIntro'].includes(s.phase);
+ const choice=['choice','offers'].includes(s.phase);
+ const timerText=s.phase==='builder'?'Cash Builder: '+s.clock+'s':'Contestant: '+s.clock+'s · Hunters: '+s.oppclock+'s';
+ shell('<p class="eyebrow">'+heading+' · '+phase+'</p><h1>'+phase+'</h1><div class="status"><span>Team prize: $'+s.money.toLocaleString()+'</span><span>Round money: $'+s.roundMoney.toLocaleString()+'</span><span>Correct: '+s.score+'</span><span>Hunter: '+s.opp+'</span><span>Qualified: '+s.survivors+'</span><span id="timer">'+timerText+'</span></div><div class="message">'+esc(s.log)+'</div>'+setHtml(s)+gamePanel(s)+(isIntro?introHtml(s):s.phase==='choice'?choiceHtml(s):s.phase==='offers'?'':'<div class="question">'+esc(s.q.q)+'</div><div class="answers">'+s.q.opts.map((a,i)=>'<button data-answer="'+i+'">'+esc(a)+'</button>').join('')+'</div>'));
+ if(window.wolfStage){window.wolfStage.render(s.mode==='btw'?'btw':'hunt');window.wolfStage.updateDen(s.q?.q,s.lastCorrect)}
+}
+
 function setHtml(s){return '<section class="three-scene"><div class="three-controls"><strong>FULL 3D STUDIO</strong><div><button data-camera="stage">Wide Stage</button><button data-camera="close">Podium Camera</button><button data-camera="entrance">Entrance Tunnel</button><button data-camera="den">Hunter\'s Den</button></div></div><div id="stage3d" class="stage3d" aria-label="Interactive 3D game show stage"></div><p class="muted">3D prototype: modeled stage, podiums, studio lighting, tunnel entrance and Hunter\'s Den. Characters and animation are still in development.</p></section>'}
 function introHtml(s){const begin=s.phase==='builderIntro';return '<div class="card round-intro"><h2>'+(begin?'CASH BUILDER':'HEAD-TO-HEAD')+'</h2><p>'+(begin?'Each correct answer earns $1,000. Build your prize before facing any Hunter.':'You built $'+s.roundMoney.toLocaleString()+'. Next: '+esc(friends[s.round%4])+'.')+'</p><button class="primary" data-round-next="'+(begin?'builder':'qual')+'">'+(begin?'Start Cash Builder':'Bring Out the Hunter')+'</button></div>'}
 function choiceHtml(s){return '<h2>Choose your challenge</h2><p>More Hunters means a larger prize multiplier. Your base prize: $'+s.money.toLocaleString()+'.</p><div class="grid">'+[2,3,4,5].map(n=>'<div class="card"><h2>'+n+' Hunters</h2><p>Potential prize: $'+(s.money*n).toLocaleString()+'</p><button data-choose="'+n+'">Face '+n+' Hunters</button></div>').join('')+'</div>'}
