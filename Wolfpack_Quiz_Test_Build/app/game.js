@@ -66,14 +66,14 @@ function advance(){
   s.finalStage='team';s.clock=120;s.oppclock=120;s.score=s.survivors;s.headStart=s.survivors;s.opp=0;s.pushbacks=0;s.turn='player';
   s.log='FACE THE RAVEN — '+s.survivors+' survivor(s), '+s.headStart+' point head start. Team plays first for 120 seconds.';
  }else if(s.phase==='finalHunter'){
-  s.finalStage='hunter';s.turn='hunter';s.oppclock=120;
+  s.finalStage='hunter';s.turn='hunter';s.oppclock=120;s.aiDelay=0;
   s.log='THE RAVEN CHASES — Target '+s.score+'. Each wrong answer gives the team a pushback opportunity.';
  }else if(s.phase==='pushback'){
   s.turn='player';s.log='PUSHBACK CHANCE! Answer correctly to push The Raven back one step.';
  }else if(s.phase==='choice'){
   s.money=s.roundMoney;s.log='Choose how many Hunters to face. More Hunters offer more money and a tougher clock.';
  }else if(s.phase==='duel'){
-  s.clock=60;s.oppclock=45+Math.max(0,5-s.opponents)*10;s.turn='player';s.score=0;s.opp=0;
+  s.clock=60;s.oppclock=45+Math.max(0,5-s.opponents)*10;s.aiDelay=0;s.turn='player';s.score=0;s.opp=0;
   s.selectedHunters=selectWolfpackHunters(s.opponents);
   s.log='Beat '+s.opponents+' Hunters: '+s.selectedHunters.join(', ')+'. Clocks alternate after each answer. First clock to zero loses.';
  }else if(s.phase==='hunter'){
@@ -90,10 +90,26 @@ function startTimer(){
  tick=setInterval(()=>{
   const s=session;if(!s)return;
   if(s.phase==='builder')s.clock--;
-  else if(s.phase==='duel'){if(s.turn==='player')s.clock--;else s.oppclock--;}
-  else if(s.phase==='final')s.clock--;
-  else if(s.phase==='finalHunter')s.oppclock--;
-  else if(s.phase==='hunter'){if(s.turn==='player')s.clock--;else s.oppclock--;}
+  else if(s.phase==='duel'){
+   if(s.turn==='player')s.clock--;
+   else{s.oppclock--;s.aiDelay=(s.aiDelay||0)+1;
+    if(s.aiDelay>=3){
+     s.aiDelay=0;
+     if(Math.random()<.8){s.opp++;s.turn='player';s.log='The Hunters answer correctly. Your clock is running!';nextTurn()}
+     else{s.log='The Hunters miss. Their clock keeps running.';const msg=document.querySelector('.message');if(msg)msg.textContent=s.log}
+    }
+   }
+  }else if(s.phase==='final')s.clock--;
+  else if(s.phase==='finalHunter'){
+   s.oppclock--;s.aiDelay=(s.aiDelay||0)+1;
+   if(s.aiDelay>=4){
+    s.aiDelay=0;
+    if(Math.random()<.76){s.opp++;s.log='The Raven answers correctly: '+s.opp+' / '+s.score;}
+    else{s.phase='pushback';s.log='The Raven gets one wrong — a pushback chance for the team.';stop();draw();return}
+    if(s.opp>=s.score){finish(false);return}
+    nextTurn();
+   }
+  }else if(s.phase==='hunter'){if(s.turn==='player')s.clock--;else s.oppclock--;}
   else return;
   const el=document.getElementById('timer');
   if(el)el.textContent=s.phase==='builder'?'Cash Builder: '+s.clock+'s':'Contestant: '+s.clock+'s · Hunters: '+s.oppclock+'s';
@@ -101,7 +117,7 @@ function startTimer(){
   if(s.phase==='final'&&s.clock<=0){s.phase='finalHunter';advance();return}
   if(s.phase==='finalHunter'&&s.oppclock<=0){finish(true);return}
   if(s.phase==='duel'&&(s.clock<=0||s.oppclock<=0)){finish(s.oppclock<=0);return}
-  if(s.phase==='hunter'&&(s.clock<=0||s.oppclock<=0)){finish(s.oppclock<=0);return}
+  if(s.phase==='hunter'&&(s.clock<=0||s.oppclock<=0)){finish(s.oppclock<=0)}
  },1000);
 }
 function finishBuilder(){
