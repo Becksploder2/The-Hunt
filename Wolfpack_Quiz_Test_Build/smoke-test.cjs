@@ -9,6 +9,7 @@ const context={
  console,Math,JSON,Number,String,Array,Object,Set,Date,Boolean,window:{wolfStage:{render(){},destroy(){},setView(){},updateDen(){}},wolfAudio:{start(){},stop(){},answer(){},result(){},toggle(){}}},
  localStorage:{getItem(){return null},setItem(){}},
  document:{
+   querySelectorAll(){return []},querySelector(){return null},
    getElementById(id){return id==='app'?{set innerHTML(v){output=v},get innerHTML(){return output}}:(elements[id]||null)},
    addEventListener(){}
  },
@@ -39,8 +40,19 @@ verify('FACE THE RAVEN','session.phase="final";advance()');
 verify('BEAT THE WOLFPACK','start("btw")');
 assert.ok(output.includes('Hunter&#39;s Den')||output.includes("Hunter's Den"),'Hunter Den view missing');
 verify('Wolfpack Showdown','session.phase="duel";advance()');
+verify('Hunter Offers','start("hunt");session.phase="offers";advance()');
+assert.ok(output.includes('HIGH OFFER'),'Three offer selection not available');
+verify('Head-to-Head','session.offer=3000;session.offerStep=2;session.phase="qual";advance()');
+assert.ok(output.includes('chase-track'),'Moving money and hunter board missing');
+verify('FACE THE RAVEN','session.survivors=2;session.phase="final";advance()');
+assert.equal(vm.runInContext('session.score',context),2,'Final Chase missing survivor head start');
+verify('THE RAVEN IS CHASING','session.phase="finalHunter";advance()');
+verify('Choose your challenge','start("btw");session.phase="choice";advance()');
+assert.ok(output.includes('Face 1 Hunter'),'Beat the Wolfpack must allow one Hunter');
+verify('Wolfpack Showdown','session.opponents=5;session.phase="duel";advance()');
+assert.equal(vm.runInContext('session.selectedHunters.length',context),5,'Five Hunter battle broken');
 assert.ok(output.includes('stage3d'),'Wolfpack 3D scene missing');
 for(const view of ['stage','close','entrance','den'])assert.ok(output.includes('data-camera="'+view+'"'),'Missing 3D camera: '+view);
 const stageCode=fs.readFileSync(require('node:path').join(__dirname,'app/stage3d.js'),'utf8');
 for(const item of ['buildHunt','buildWolfpack','buildDen','updateDen','HUNTER DEN — LIVE','ENTRANCE TUNNEL'])assert.ok(stageCode.includes(item),'Missing 3D stage component: '+item);
-console.log('PASS: renderer starts, home and menus render, Arianna host editor opens, Hunt finale and BTW showdown render');
+console.log('PASS: 3D studio intact, Hunter offers, chase board, survivor head start, pushback, BTW 1–5 Hunter battles and editors');
