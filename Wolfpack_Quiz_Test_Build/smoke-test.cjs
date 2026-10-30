@@ -6,7 +6,7 @@ const html=fs.readFileSync(require('node:path').join(__dirname,'app/game.js'),'u
 const elements={};
 let output='';
 const context={
- console,Math,JSON,Number,String,Array,Object,Set,Date,Boolean,window:{wolfStage:{render(){},destroy(){},setView(){}},wolfAudio:{start(){},stop(){},answer(){},result(){},toggle(){}}},
+ console,Math,JSON,Number,String,Array,Object,Set,Date,Boolean,window:{wolfStage:{render(){},destroy(){},setView(){},updateDen(){}},wolfAudio:{start(){},stop(){},answer(){},result(){},toggle(){}}},
  localStorage:{getItem(){return null},setItem(){}},
  document:{
    getElementById(id){return id==='app'?{set innerHTML(v){output=v},get innerHTML(){return output}}:(elements[id]||null)},
@@ -35,4 +35,7 @@ verify('BEAT THE WOLFPACK','start("btw")');
 assert.ok(output.includes('Hunter&#39;s Den')||output.includes("Hunter's Den"),'Hunter Den view missing');
 verify('Wolfpack Showdown','session.phase="duel";advance()');
 assert.ok(output.includes('stage3d'),'Wolfpack 3D scene missing');
+for(const view of ['stage','close','entrance','den'])assert.ok(output.includes('data-camera="'+view+'"'),'Missing 3D camera: '+view);
+const stageCode=fs.readFileSync(require('node:path').join(__dirname,'app/stage3d.js'),'utf8');
+for(const item of ['buildHunt','buildWolfpack','buildDen','updateDen','HUNTER DEN — LIVE','ENTRANCE TUNNEL'])assert.ok(stageCode.includes(item),'Missing 3D stage component: '+item);
 console.log('PASS: renderer starts, home and menus render, Arianna host editor opens, Hunt finale and BTW showdown render');
