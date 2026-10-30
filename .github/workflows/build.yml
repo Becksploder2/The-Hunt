@@ -1,0 +1,40 @@
+name: Build The Hunt and Beat the Wolfpack
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  package:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            script: dist:win
+            artifact: The-Hunt-Windows
+          - os: macos-latest
+            script: dist:mac
+            artifact: The-Hunt-macOS
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        working-directory: Wolfpack_Quiz_Test_Build
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: Build desktop app
+        run: npm run ${{ matrix.script }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Upload installers
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+          path: Wolfpack_Quiz_Test_Build/dist/*
+          if-no-files-found: error
