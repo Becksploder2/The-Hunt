@@ -1,1 +1,49 @@
-:root{font-family:Segoe UI,Arial,sans-serif;color:#f6f7ff;background:#090d1b}*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 70% 0%,#25315e 0%,#090d1b 55%);min-height:100vh}button,input,textarea,select{font:inherit}button{cursor:pointer;border:1px solid #5867a1;border-radius:10px;padding:13px 19px;color:white;background:#1d2c58}button:hover:not(:disabled){background:#334986}button:disabled{opacity:.45;cursor:not-allowed}header{display:flex;align-items:center;justify-content:space-between;padding:22px 34px;border-bottom:1px solid #39416b;background:#080c1bbd}header b{font-size:24px;letter-spacing:2px}.logo{color:#f5bd60}main{max-width:1120px;margin:auto;padding:30px}.eyebrow{text-transform:uppercase;letter-spacing:3px;color:#f5bd60;font-size:12px;font-weight:800}h1{font-size:clamp(32px,5vw,58px);margin:10px 0}h2{font-size:27px;margin:8px 0 20px}.sub{color:#aab4d1}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:16px}.card{padding:24px;background:linear-gradient(145deg,#1b2343,#11182e);border:1px solid #424f80;border-radius:16px}.card h2{margin:12px 0}.red{border-color:#a34b56}.gold{border-color:#b8894d}.big{font-size:22px;font-weight:800}.pill{display:inline-block;border-radius:30px;background:#354270;padding:6px 12px;font-size:12px}.btnrow{display:flex;flex-wrap:wrap;gap:12px;margin:18px 0}.primary{background:#b02c48;border-color:#f46679}.primary:hover{background:#d53e5c!important}.question{font-size:clamp(22px,3vw,36px);padding:22px;background:#111b39;border:1px solid #5266a3;border-radius:16px;margin:22px 0}.answers{display:grid;grid-template-columns:1fr 1fr;gap:12px}.answers button{text-align:left;min-height:72px;font-size:18px}.status{display:flex;flex-wrap:wrap;gap:10px;margin:16px 0}.status span{padding:10px 14px;border-radius:9px;background:#26335c}.message{border-left:4px solid #e8b85e;padding:15px;background:#202843;margin:18px 0}.correct{color:#8df0ba}.wrong{color:#ff9a9a}input,textarea,select{background:#111a33;border:1px solid #5867a1;color:white;border-radius:8px;padding:12px;width:100%;margin:8px 0}textarea{min-height:95px}.muted{color:#9faac9;font-size:13px}.lock{opacity:.7}.topnav{display:flex;gap:8px;flex-wrap:wrap}#timer{font-variant-numeric:tabular-nums}.hunter{font-size:38px;margin:0}.progress{height:14px;background:#252c4e;border-radius:30px;overflow:hidden;margin:12px 0}.progress>div{height:100%;background:linear-gradient(90deg,#4b86f5,#e6bd69);transition:width .2s}@media(max-width:650px){header{padding:16px;align-items:flex-start;gap:10px;flex-direction:column}main{padding:18px}.answers{grid-template-columns:1fr}}
+:root{font-family:Segoe UI,Arial,sans-serif;color:#fff;background:#090909;--orange:#ff7900;--black:#080808;--surface:#181818;--border:#82400a}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;background:radial-gradient(ellipse at 80% 0%,#542702 0%,#14110e 38%,#080808 75%);color:#fff}
+button,input,textarea,select{font:inherit;color:#fff}
+button{cursor:pointer;border:1px solid #db6600;border-radius:10px;padding:13px 19px;color:#fff;background:#24201c;transition:background .16s,transform .16s}
+button:hover:not(:disabled){background:#b95600;transform:translateY(-1px)}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid #ff9c3e;outline-offset:2px}
+button:disabled{opacity:.48;cursor:not-allowed}
+header{display:flex;align-items:center;justify-content:space-between;padding:22px 34px;border-bottom:2px solid #ff7900;background:#070707e8}
+header b{font-size:23px;letter-spacing:1.8px;color:#fff}
+.logo{color:#ff7900}
+main{max-width:1150px;margin:auto;padding:30px}
+.eyebrow{text-transform:uppercase;letter-spacing:3px;color:#fff;font-size:12px;font-weight:800}
+h1{font-size:clamp(32px,5vw,58px);margin:10px 0;color:#fff}
+h2{font-size:27px;margin:8px 0 20px;color:#fff}
+.sub,.muted{color:#fff}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:16px}
+.card{padding:24px;background:linear-gradient(145deg,#21180f,#101010);border:1px solid #86410e;border-radius:16px;color:#fff}
+.card h2{margin:12px 0}
+.red,.gold{border-color:#ff7900}
+.big{font-size:22px;font-weight:800}
+.pill{display:inline-block;border-radius:30px;background:#a94d00;padding:6px 12px;font-size:12px;color:#fff}
+.btnrow{display:flex;flex-wrap:wrap;gap:12px;margin:18px 0}
+.primary{background:#ff7900;border-color:#ff9f4c;color:#fff;font-weight:750}
+.primary:hover{background:#d36100!important}
+.question{font-size:clamp(22px,3vw,36px);padding:22px;background:#0a0a0a;border:2px solid #ff7900;border-radius:16px;margin:22px 0;color:#fff}
+.answers{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.answers button{text-align:left;min-height:72px;font-size:18px;background:#1a1a1a;color:#fff}
+.answers button:hover:not(:disabled){background:#924300}
+.answers button.answer-correct,.correct{background:#ff7900!important;color:#fff!important;border-color:#ffb66c}
+.answers button.answer-wrong,.wrong{background:#000!important;color:#fff!important;border-color:#555}
+.status{display:flex;flex-wrap:wrap;gap:10px;margin:16px 0}
+.status span{padding:10px 14px;border-radius:9px;background:#111;border:1px solid #c15a00;color:#fff}
+.status #timer{background:linear-gradient(120deg,#ff7900 0%,#111 95%);color:#fff;font-weight:750;border:2px solid #ff7900}
+.message{border-left:5px solid #ff7900;padding:15px;background:#1c1109;margin:18px 0;color:#fff}
+input,textarea,select{background:#090909;border:1px solid #b65c0a;color:#fff;border-radius:8px;padding:12px;width:100%;margin:8px 0}
+textarea{min-height:95px}
+.muted{font-size:13px}
+.lock{opacity:.72}
+.topnav{display:flex;gap:8px;flex-wrap:wrap}
+#timer{font-variant-numeric:tabular-nums}
+.hunter{font-size:38px;margin:0}
+.progress{height:14px;background:#181818;border-radius:30px;overflow:hidden;margin:12px 0}
+.progress>div{height:100%;background:linear-gradient(90deg,#ff7900,#fff);transition:width .2s}
+.host-avatar{display:flex;align-items:center;flex-direction:column;gap:13px;padding:32px 16px;background:radial-gradient(circle at 50% 15%,#ad530a,#151515 70%);border:1px solid #ff7900;border-radius:15px;text-align:center;color:#fff}
+.host-hair{font-size:78px}
+.host-avatar strong{font-size:24px}
+.host-avatar small{font-size:12px}
+@media(max-width:650px){header{padding:16px;align-items:flex-start;gap:10px;flex-direction:column}main{padding:18px}.answers{grid-template-columns:1fr}}
