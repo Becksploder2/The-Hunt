@@ -6,7 +6,7 @@ const html=fs.readFileSync(require('node:path').join(__dirname,'app/game.js'),'u
 const elements={};
 let output='';
 const context={
- console,Math,JSON,Number,String,Array,Object,Set,Date,Boolean,window:{wolfAudio:{start(){},stop(){},answer(){},result(){},toggle(){}}},
+ console,Math,JSON,Number,String,Array,Object,Set,Date,Boolean,window:{wolfStage:{render(){},destroy(){},setView(){}},wolfAudio:{start(){},stop(){},answer(){},result(){},toggle(){}}},
  localStorage:{getItem(){return null},setItem(){}},
  document:{
    getElementById(id){return id==='app'?{set innerHTML(v){output=v},get innerHTML(){return output}}:(elements[id]||null)},
@@ -26,11 +26,10 @@ for(const name of ['The Professor','Karli Rae','The Red Raider','Scarlett Raines
 assert.ok(!output.includes('Eric Herrera'),'Eric should be credited by first name only');
 assert.ok(output.includes('Fight Raiders Fight'),'Scarlett music assignment missing');
 verify('CASH BUILDER','start("hunt")');
-assert.ok(output.includes('studio'),'The Hunt stage failed to render');
+assert.ok(output.includes('stage3d'),'The Hunt 3D stage container failed to render');
 verify('FACE THE RAVEN','session.phase="final";advance()');
 verify('BEAT THE WOLFPACK','start("btw")');
-assert.ok(output.includes('hunter-gallery'),'Six-Hunter studio missing');
+assert.ok(output.includes('Hunter&#39;s Den')||output.includes("Hunter's Den"),'Hunter Den view missing');
 verify('Wolfpack Showdown','session.phase="duel";advance()');
-assert.ok(output.includes('The Raven'),'Raven Hunter station missing');
-assert.equal((output.match(/class="hunter-seat/g)||[]).length,5,'Expected exactly five Hunter podiums');
+assert.ok(output.includes('stage3d'),'Wolfpack 3D scene missing');
 console.log('PASS: renderer starts, home and menus render, Arianna host editor opens, Hunt finale and BTW showdown render');
