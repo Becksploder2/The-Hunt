@@ -108,3 +108,29 @@ textarea{min-height:95px}
 .track-cell.hunter-cell{box-shadow:inset 0 0 0 3px #e53232;background:#711313;color:#fff}
 .track-cell.player-cell.hunter-cell{background:linear-gradient(140deg,#a24c00 50%,#711313 50%)}
 @media(max-width:620px){.chase-track{gap:2px}.track-cell{font-size:10px;padding:10px 1px}}
+
+/* Original Wolfpack broadcast graphics: dimensional metallic-blue framing,
+   clearly differentiated orange (correct) and black (incorrect) answer states. */
+:root{--broadcast-metal:#72b7db;--broadcast-blue:#133453;--broadcast-deep:#061625;--broadcast-edge:#9bc5db}
+.broadcast-scorebar{align-items:stretch;gap:9px;margin:14px 0 18px}
+.broadcast-scorebar span{display:flex;align-items:center;min-height:55px;border-radius:5px;box-shadow:inset 0 2px 0 #b2d9ec77,inset 0 -3px 9px #000b,0 5px 12px #0005;border:1px solid #6795b0;background:linear-gradient(180deg,#345978 0%,#17344f 30%,#071726 100%);color:#fff;font-weight:750;text-shadow:0 1px 2px #000}
+.broadcast-scorebar span.metal-timer{background:linear-gradient(130deg,#214868,#09213a 55%,#183d59);border:2px solid #b1d5e9;font-size:15px;letter-spacing:.025em;font-variant-numeric:tabular-nums}
+.metallic-message{border:2px solid #8dbad1!important;border-radius:5px!important;background:linear-gradient(180deg,#355778,#183650 55%,#07182b)!important;box-shadow:inset 0 2px 0 #bedce69c,inset 0 -5px 14px #0007,0 8px 20px #0008;padding:19px 22px!important;font-size:clamp(16px,2.2vw,22px);font-weight:700;line-height:1.5;color:#fff}
+.broadcast-question{position:relative;border:2px solid #99c5dd!important;border-radius:5px!important;background:linear-gradient(167deg,#315c7a 0%,#173c5e 25%,#092139 70%,#0f2b47 100%)!important;box-shadow:inset 0 4px 0 #c6e3ed77,inset 0 -7px 16px #0008,0 10px 28px #0009!important;font-family:Arial,Segoe UI,sans-serif;font-weight:780;letter-spacing:.01em;text-align:center;min-height:116px;display:flex;align-items:center;justify-content:center;padding:28px 25px!important;color:#fff}
+.broadcast-question:before{content:'◆ WOLFPACK QUESTION';position:absolute;left:12px;top:-15px;padding:5px 14px;border:1px solid #89bdd8;background:#0b2540;font-size:10px;font-weight:900;letter-spacing:2px;color:#fff;border-radius:2px}
+.broadcast-answers{gap:13px;margin-bottom:18px}
+.broadcast-answers button{border:2px solid #88b8d2!important;border-radius:5px!important;background:linear-gradient(170deg,#3f6682,#17334f 38%,#07172d)!important;box-shadow:inset 0 2px 0 #c0dfec66,inset 0 -5px 10px #0009,0 5px 10px #0008!important;text-align:center;min-height:78px;font-weight:780;font-size:clamp(15px,2vw,20px);transition:filter .17s,transform .13s}
+.broadcast-answers button:not(:disabled):hover{filter:brightness(1.23);transform:translateY(-2px)}
+.broadcast-answers button.answer-correct{background:linear-gradient(180deg,#ffac39 0%,#ed7500 42%,#a74900 100%)!important;border-color:#ffd9a0!important;box-shadow:inset 0 2px 0 #fff8,0 0 15px #ff7900bb!important;color:white!important;animation:answer-reveal .35s ease-out}
+.broadcast-answers button.answer-wrong{background:linear-gradient(180deg,#383838,#111 45%,#050505)!important;border-color:#929292!important;color:white!important}
+.broadcast-answers button:disabled{opacity:1}
+@keyframes answer-reveal{0%{transform:scale(.97);filter:brightness(1.75)}100%{transform:scale(1);filter:brightness(1)}}
+.three-scene{border:2px solid #70a4c0;box-shadow:0 16px 40px #0009,0 0 28px #c56a1559;background:#071521}
+.three-controls{background:linear-gradient(180deg,#1a405d,#071726);border-bottom:2px solid #a2c7dc}
+.three-controls strong{font-size:12px;letter-spacing:2px}
+.three-controls button{background:#102c47;border-color:#668fae}
+.three-controls button:hover{background:#295e80}
+.stage3d{height:500px}
+.three-scene>.muted{background:#091d2c;padding:12px 16px;margin:0}
+@media(max-width:740px){.stage3d{height:340px}.broadcast-scorebar span{font-size:12px;min-height:45px}.broadcast-question{min-height:105px}}
+@media(max-width:540px){.stage3d{height:270px}.broadcast-answers{grid-template-columns:1fr}.broadcast-answers button{min-height:62px}}
