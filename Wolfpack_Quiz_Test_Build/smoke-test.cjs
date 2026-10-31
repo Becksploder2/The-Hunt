@@ -27,8 +27,12 @@ for(const name of ['The Professor','Karli Rae','The Red Raider','Scarlett Raines
 assert.ok(!output.includes('Eric Herrera'),'Eric should be credited by first name only');
 assert.ok(output.includes('Fight Raiders Fight'),'Scarlett music assignment missing');
 verify('Create a Contestant','go("contestants")');
-assert.ok(output.includes('Next ▶'),'Contestant step wizard missing');
+assert.ok(output.includes('Save & Next ▶'),'Contestant step wizard missing');
+for(const select of ['con_hair','con_glasses','con_outfit'])assert.ok(output.includes('<select id="'+select+'"'),'Contestant dropdown missing: '+select);
 verify('Hunter rotation','go("show")');
+assert.ok(output.includes('builderSeconds'),'Show timer dropdown missing');
+verify('Edit Host','go("host")');
+for(const select of ['host_hair','host_style','host_glasses','host_braces','host_outfit'])assert.ok(output.includes('<select id="'+select+'"'),'Host dropdown missing: '+select);
 verify('Music Importer','go("music")');
 verify('Career Records','go("records")');
 verify('CASH BUILDER','start("hunt")');
@@ -56,5 +60,5 @@ assert.equal(vm.runInContext('session.selectedHunters.length',context),5,'Five H
 assert.ok(output.includes('stage3d'),'Wolfpack 3D scene missing');
 for(const view of ['stage','close','entrance','den'])assert.ok(output.includes('data-camera="'+view+'"'),'Missing 3D camera: '+view);
 const stageCode=fs.readFileSync(require('node:path').join(__dirname,'app/stage3d.js'),'utf8');
-for(const item of ['buildHunt','buildWolfpack','buildDen','updateDen','HUNTER DEN — LIVE','ENTRANCE TUNNEL','studioLights','stageArch','curvedDesk','mainFloor'])assert.ok(stageCode.includes(item),'Missing 3D stage component: '+item);
+for(const item of ['buildHunt','buildWolfpack','buildDen','updateDen','HUNTER DEN — LIVE','ENTRANCE TUNNEL','studioLights','stageArch','curvedDesk','mainFloor','ringPlatform','floorChevron','verticalWallFrames'])assert.ok(stageCode.includes(item),'Missing 3D stage component: '+item);
 console.log('PASS: expanded 3D studios and broadcast display, Hunter offers, chase board, survivor head start, pushback, BTW 1–5 Hunter battles and editors');
