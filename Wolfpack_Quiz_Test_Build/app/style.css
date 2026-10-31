@@ -134,3 +134,18 @@ textarea{min-height:95px}
 .three-scene>.muted{background:#091d2c;padding:12px 16px;margin:0}
 @media(max-width:740px){.stage3d{height:340px}.broadcast-scorebar span{font-size:12px;min-height:45px}.broadcast-question{min-height:105px}}
 @media(max-width:540px){.stage3d{height:270px}.broadcast-answers{grid-template-columns:1fr}.broadcast-answers button{min-height:62px}}
+
+/* Unified high-contrast, responsive creation menus. Selects use native option
+   popups with opaque text/background to avoid truncated lists on Windows/macOS. */
+.creator-page{width:100%;max-width:1100px;margin:auto}
+.creator-page .grid{grid-template-columns:repeat(auto-fit,minmax(min(100%,390px),1fr));align-items:start}
+.creator-card{overflow:visible;min-width:0}
+.creator-form{display:grid;grid-template-columns:minmax(0,1fr);gap:18px}
+.creator-page label,.creator-card label{display:flex!important;flex-direction:column!important;gap:8px!important;margin:0 0 12px!important;min-width:0!important;font-size:16px!important;font-weight:750!important;color:#fff!important;line-height:1.45!important}
+.creator-page input,.creator-page select,.creator-card input,.creator-card select{display:block;width:100%!important;min-width:0!important;max-width:100%!important;min-height:54px!important;box-sizing:border-box!important;padding:13px 44px 13px 15px!important;margin:0!important;font-size:17px!important;font-weight:650!important;color:#fff!important;background-color:#102c43!important;border:2px solid #8cb7d2!important;border-radius:7px!important;line-height:1.45!important;overflow:visible!important;text-overflow:ellipsis!important}
+.creator-page input,.creator-card input{padding-right:15px!important}
+.creator-page select option,.creator-card select option,select option{color:#fff!important;background:#152b42!important;font-size:16px!important;font-weight:600!important;padding:9px!important}
+.creator-page input:focus,.creator-page select:focus,.creator-card select:focus{outline:3px solid #ffad51!important;outline-offset:2px!important}
+.creator-page h1,.creator-page h2,.creator-page p{overflow-wrap:anywhere}
+.creator-page .btnrow button{min-height:52px;white-space:normal;text-align:center}
+@media(max-width:650px){.creator-page .grid{display:grid;grid-template-columns:minmax(0,1fr)}.creator-page .card{padding:17px}.creator-page select{font-size:16px!important}}
