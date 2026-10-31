@@ -214,7 +214,7 @@ function answer(index){
   nextTurn();return;
  }
 }
-function nextTurn(){const s=session;if(!s)return;s.answered=false;s.q=nextQ();draw()}
+function nextTurn(){const s=session;if(!s)return;const reveal=s.answered===true;const proceed=()=>{if(session!==s)return;s.answered=false;s.q=nextQ();draw()};if(reveal)setTimeout(proceed,650);else proceed()}
 function finish(win){
  stop();const s=session;if(!s)return;
  if(window.wolfAudio)window.wolfAudio.result(win);
