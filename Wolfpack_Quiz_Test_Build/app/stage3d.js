@@ -19,26 +19,85 @@ function mannequin(x,z,group=scene,accent=mOrange){const skin=makeMat(0xd0a082),
 function post(x,z,h=1.4){block(.85,h,.7,x,h/2,z,mDark);block(.95,.12,.8,x,h,z,mOrange);block(.82,.22,.12,x,h*.55,z+.37,mMetal)}
 function panelWall(){block(19,.4,15,0,-.2,0,mDark);block(19,7,.25,0,3.3,-8,mMetal);block(.25,6,15,-9.3,2.8,0,mMetal);block(.25,6,15,9.3,2.8,0,mMetal);for(let x=-8;x<=8;x+=2){block(.09,6,.12,x,3,-7.8,mOrange)}for(let z=-6;z<=6;z+=2){block(17,.025,.05,0,.025,z,mOrange)}block(3.1,5,.4,-7.3,2.5,-7.65,mDark);textSurface('ENTRANCE TUNNEL',-7.2,4.3,-7.34,3,.4);}
 function light(x,y,z,intensity=9){const p=new THREE.PointLight(orange,intensity,12);p.position.set(x,y,z);scene.add(p);}
+
+const mBlue=makeMat(0x17365b,0x071c38),mIce=makeMat(0x5da4c5,0x082d45),mGold=makeMat(0xb87b30,0x422009),mFloor=makeMat(0x121b27),mGlass=new THREE.MeshPhysicalMaterial({color:0x37617d,metalness:.45,roughness:.12,transparent:true,opacity:.76});
+function cylinder(rt,rb,h,x,y,z,mat=mMetal,group=scene,segments=32){const o=new THREE.Mesh(new THREE.CylinderGeometry(rt,rb,h,segments),mat);o.position.set(x,y,z);group.add(o);return o;}
+function strip(x1,y1,z1,x2,y2,z2,thickness=.065,mat=mOrange,group=scene){
+ const a=new THREE.Vector3(x1,y1,z1),b=new THREE.Vector3(x2,y2,z2),d=b.clone().sub(a);
+ const o=new THREE.Mesh(new THREE.CylinderGeometry(thickness,thickness,d.length(),8),mat);
+ o.position.copy(a.add(b).multiplyScalar(.5));o.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),d.normalize());group.add(o);return o;
+}
+function truss(){for(let x of [-8,8])for(let z of [-5,1,6]){cylinder(.12,.12,6.2,x,3.1,z,mMetal);cylinder(.2,.2,.12,x,6.3,z,mOrange)}
+ for(let z of [-5,1,6]){strip(-8,6.15,z,8,6.15,z,.12,mMetal);for(let x=-7;x<8;x+=2){strip(x,6.15,z,x+1,5.65,z,.045,mGold);strip(x+1,5.65,z,x+2,6.15,z,.045,mGold)}}}
+function studioLights(){for(let x=-7;x<=7;x+=3.5){const p=new THREE.SpotLight(0xff9b39,35,22,Math.PI/6,.35);p.position.set(x,6,5);p.target.position.set(x*.45,.2,-3);scene.add(p,p.target);const head=cylinder(.25,.35,.48,x,5.86,5,mMetal);head.rotation.x=.3}
+ for(let x of [-8.5,8.5])for(let z of [-5,-1,3]){const p=new THREE.PointLight(0x3b90b9,9,8);p.position.set(x,2.6,z);scene.add(p)}}
+function mainFloor(){block(19,.36,15,0,-.32,0,mFloor);for(let i=-8;i<=8;i++){strip(i,.015,-7,i,.015,6.4,.014,mIce)}
+ for(let z=-6;z<7;z+=1.5)strip(-8.5,.018,z,8.5,.018,z,.02,mBlue);
+ block(15,.21,4,0,.11,-1.8,mDark);block(15,.11,.12,0,.23,.12,mOrange);
+ for(let x of [-7.8,7.8])for(let z=-4;z<=4;z+=1.3){cylinder(.09,.09,.05,x,.07,z,mGold)}
+}
+function doorway(x,z,label){
+ block(3.25,4.7,.55,x,2.35,z,mMetal);block(2.58,4,.1,x,2.15,z+.34,mDark);
+ for(let k=0;k<4;k++){const w=2.9-k*.35;block(w,.055,.12,x,.7+k*.96,z+.48,mOrange);}
+ textSurface(label,x,4.9,z+.51,3,.38);
+}
+function stageArch(){
+ for(let x of [-8.8,8.8]){block(.36,6,.6,x,3,-7.45,mBlue);block(.13,5,.7,x,3,-7.01,mIce)}
+ block(18,.38,.75,0,5.95,-7.45,mBlue);
+ for(let x=-7;x<=7;x+=2){block(.08,5.3,.18,x,3,-7.04,mOrange);block(1.55,.07,.15,x,5.55,-7.01,mGold)}
+}
+function curvedDesk(x,y,z,w,name){
+ cylinder(w/2.2,w/2.05,.31,x,y,z,mBlue);
+ block(w,.23,1.17,x,y+.22,z,mMetal);
+ block(w+.12,.095,1.32,x,y+.36,z,mIce);
+ block(w-.12,.71,.15,x,y-.2,z+.6,mBlue);
+ textSurface(name,x,y-.18,z+.72,w-.14,.42);
+}
+
 function buildHunt(){
- panelWall();block(17,.1,1,0,.06,1.4,mOrange);
- block(9,.75,2.2,0,1.1,-1.5,mMetal);block(9,.12,2.3,0,1.55,-1.5,mOrange);
- for(let x of [-3.2,-1.5,0,1.5,3.2])textSurface('◆',x,1.69,-.72,.8,.27);
- post(-6,2.1);post(6,2.1);mannequin(-6,1.1);mannequin(6,1.1);block(12,.12,1,0,.1,4.2,mOrange);textSurface('THE HUNT',0,4.4,-7.7,8,1.25);
- textSurface('CONTESTANT',-6,1.95,2.51,2,.4);textSurface('HUNTER',6,1.95,2.51,2,.4);
- for(let x of [-7,0,7])light(x,5,-1);
+ panelWall();mainFloor();truss();studioLights();stageArch();doorway(-7.0,-7.28,'HUNTER TUNNEL');
+ // Wide television set: raised long transparent chase table with stepped plinths.
+ for(let i=0;i<3;i++){block(14-i*.8,.2,4.6-i*.52,0,.24+i*.23,-2.05,mDark);block(14-i*.8,.045,4.6-i*.52,0,.35+i*.23,-.05-i*.26,mIce)}
+ block(10.8,.48,2.2,0,1.25,-1.9,mBlue);
+ block(10.9,.11,2.3,0,1.56,-1.9,mGlass);
+ block(10.8,.11,.17,0,1.66,-.69,mOrange);
+ for(let x=-4.6;x<=4.6;x+=1.15){block(.12,.065,1.6,x,1.68,-1.9,mIce)}
+ for(let x of [-6.3,6.3]){
+  cylinder(1.0,1.26,.38,x,.42,1.38,mMetal);
+  cylinder(.85,.95,.28,x,.77,1.38,mOrange);
+  block(1.75,1.25,.82,x,1.42,1.38,mBlue);
+  block(1.9,.16,1.1,x,2.1,1.38,mGlass);
+  mannequin(x,.17,scene,x<0?mOrange:mDark);
+ }
+ textSurface('THE HUNT',0,4.45,-7.05,7.7,1.1);
+ textSurface('CONTESTANT',-6.3,1.45,1.83,1.65,.36);
+ textSurface('HUNTER',6.3,1.45,1.83,1.65,.36);
+ textSurface('CASH BUILDER  •  HEAD-TO-HEAD  •  FACE THE RAVEN',0,3.46,-7.05,9.2,.47);
+ for(let x of [-7.4,0,7.4])light(x,5,-1,10);
 }
 function buildWolfpack(){
- panelWall();
+ panelWall();mainFloor();truss();studioLights();stageArch();doorway(-7.1,-7.28,'HUNTER ENTRANCE');
+ textSurface('BEAT THE WOLFPACK',0,4.65,-7.03,11.4,1.05);
+ // Five raised individual positions in a shallow arc, not a flat wall graphic.
  for(let i=0;i<5;i++){
-  let x=(i-2)*3.2,z=-4+Math.abs(i-2)*.36;
-  block(2.45,2.35,1.2,x,1.17,z,mMetal);block(2.5,.17,1.24,x,2.38,z,mOrange);
-  const label=['PROFESSOR','RED RAIDER','EL JEFE','THE JET','THE RAVEN'][i];mannequin(x,z+.2,scene,i===4?mWhite:mDark);
-  textSurface(label,x,1.42,z+.63,2.25,.47);
-  if(i===4){block(2.65,.12,1.4,x,2.53,z,mWhite);light(x,4,z,14)}
+  const x=(i-2)*3.3,z=-3.8+Math.abs(i-2)*.48;
+  cylinder(1.28,1.5,.4,x,.34,z,mMetal);
+  cylinder(1.18,1.33,.14,x,.59,z,mOrange);
+  block(2.48,1.5,1.18,x,1.42,z,mBlue);
+  block(2.65,.17,1.43,x,2.29,z,mGlass);
+  block(2.42,.15,.2,x,1.52,z+.66,mIce);
+  mannequin(x,z+.13,scene,i===4?mWhite:mDark);
+  const name=['THE PROFESSOR','THE RED RAIDER','EL JEFE','THE JET','THE RAVEN'][i];
+  textSurface(name,x,1.17,z+.68,2.38,.42);
+  for(let j=0;j<3;j++)block(2.6,.045,.1,x,.83+j*.23,z+.69,mGold);
+  if(i===4){block(2.8,.14,1.48,x,2.47,z,mWhite);light(x,4.7,z,17)}
  }
- post(0,3.8,1.6);mannequin(0,3.2);block(15,.13,.8,0,.1,4.6,mOrange);textSurface('CONTESTANT',0,2.07,4.23,2.3,.44);
- textSurface('BEAT THE WOLFPACK',0,4.5,-7.7,10,1.22);
- for(let x of [-6,0,6])light(x,5,-1);
+ cylinder(1.65,1.8,.35,0,.24,4,mMetal);
+ cylinder(1.49,1.61,.14,0,.5,4,mOrange);
+ curvedDesk(0,1.8,4,2.8,'CONTESTANT');
+ mannequin(0,3.15);
+ textSurface('ONE CONTESTANT  ·  FIVE HUNTERS',0,3.45,-7.02,8.4,.43);
+ for(let x of [-7,0,7])light(x,5,-1,12);
 }
 function buildDen(group){
  // A complete second room, with theater seating, visible Hunter figures, a live
