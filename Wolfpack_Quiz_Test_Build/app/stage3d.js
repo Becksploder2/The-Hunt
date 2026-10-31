@@ -54,8 +54,24 @@ function curvedDesk(x,y,z,w,name){
  textSurface(name,x,y-.18,z+.72,w-.14,.42);
 }
 
+// Dedicated architectural details rather than a generic podium backdrop.
+function ringPlatform(x,y,z,outer,inner,color=mOrange,group=scene){
+ const torus=new THREE.Mesh(new THREE.TorusGeometry(outer,.065,8,64),color);
+ torus.rotation.x=-Math.PI/2;torus.position.set(x,y,z);group.add(torus);
+ const center=new THREE.Mesh(new THREE.CylinderGeometry(inner,inner,.1,48),mBlue);
+ center.position.set(x,y-.07,z);group.add(center);
+}
+function gantry(x,z){for(let y=.8;y<6;y+=.8){block(.07,.09,.22,x,y,z,mIce)}}
+function beamFace(x,y,z,w,h,mat=mBlue){block(w,h,.12,x,y,z,mat);block(w,.035,.14,x,y+h/2,z+.03,mIce)}
+function verticalWallFrames(){for(const x of [-8.6,-6.6,6.6,8.6]){block(.22,5.6,.25,x,2.95,-7.08,mIce);gantry(x,-6.87)}
+ for(let k=0;k<3;k++){beamFace(0,5.68-k*.55,-7.01,11.7-k*.65,.09,k===1?mOrange:mMetal)}}
+function seatDetail(x,y,z,angle=0){const group=new THREE.Group();group.position.set(x,y,z);group.rotation.y=angle;scene.add(group);block(.8,.14,.78,0,.48,0,mMetal,group);block(.82,.9,.15,0,.98,-.3,mDark,group);block(.14,.35,.8,-.46,.65,0,mOrange,group);block(.14,.35,.8,.46,.65,0,mOrange,group);cylinder(.13,.13,.55,0,.12,0,mMetal,group)}
+function floorChevron(x,z,flip=1){for(let i=0;i<4;i++){strip(x-1.35+i*.4,.07,z,x,.07,z+flip*.65,.04,mIce);strip(x,.07,z+flip*.65,x+1.35-i*.4,.07,z,.04,mIce)}}
 function buildHunt(){
- panelWall();mainFloor();truss();studioLights();stageArch();doorway(-7.0,-7.28,'HUNTER TUNNEL');
+ panelWall();mainFloor();truss();studioLights();stageArch();verticalWallFrames();doorway(-7.0,-7.28,'HUNTER TUNNEL');
+ for(let k=0;k<4;k++)floorChevron(-5.5+k*3.6,3.65,-1);
+ for(let x of [-7.15,7.15]){ringPlatform(x,.35,1.5,1.55,1.35);seatDetail(x,.4,2.9)}
+ beamFace(0,2.85,-7.01,12,.27,mDark);
  // Wide television set: raised long transparent chase table with stepped plinths.
  for(let i=0;i<3;i++){block(14-i*.8,.2,4.6-i*.52,0,.24+i*.23,-2.05,mDark);block(14-i*.8,.045,4.6-i*.52,0,.35+i*.23,-.05-i*.26,mIce)}
  block(10.8,.48,2.2,0,1.25,-1.9,mBlue);
@@ -76,11 +92,14 @@ function buildHunt(){
  for(let x of [-7.4,0,7.4])light(x,5,-1,10);
 }
 function buildWolfpack(){
- panelWall();mainFloor();truss();studioLights();stageArch();doorway(-7.1,-7.28,'HUNTER ENTRANCE');
+ panelWall();mainFloor();truss();studioLights();stageArch();verticalWallFrames();doorway(-7.1,-7.28,'HUNTER ENTRANCE');
+ for(let k=0;k<5;k++){const x=(k-2)*3.3;floorChevron(x,1.72,1);}
+ beamFace(0,2.85,-7.01,13.6,.28,mDark);
  textSurface('BEAT THE WOLFPACK',0,4.65,-7.03,11.4,1.05);
  // Five raised individual positions in a shallow arc, not a flat wall graphic.
  for(let i=0;i<5;i++){
   const x=(i-2)*3.3,z=-3.8+Math.abs(i-2)*.48;
+  ringPlatform(x,.2,z,1.58,1.37,i===4?mWhite:mOrange);
   cylinder(1.28,1.5,.4,x,.34,z,mMetal);
   cylinder(1.18,1.33,.14,x,.59,z,mOrange);
   block(2.48,1.5,1.18,x,1.42,z,mBlue);
@@ -149,7 +168,7 @@ function updateDen(question,correct){
 function render(modeValue='hunt',view='stage'){
  const el=document.getElementById('stage3d');
  if(!el){destroy();return}
- if(el===container && mode===modeValue){setView(view);return;}
+ if(el===container && mode===modeValue){return;}
  destroy();container=el;mode=modeValue;
  try{renderer=new THREE.WebGLRenderer({antialias:true,alpha:false});}catch(err){el.textContent='3D rendering unavailable on this computer: '+err.message;return}
  renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,1.5));
