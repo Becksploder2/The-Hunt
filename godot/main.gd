@@ -86,6 +86,10 @@ var warning_light: OmniLight3D
 var show_camera: Camera3D
 var board_marks: Array[Label3D] = []
 var host_avatar: Node3D
+var bridge_lights: Array[MeshInstance3D] = []
+var entrance_waypoints: Array[Vector3] = []
+var tilt_table: Node3D
+var walkway_phase := 0.0
 var marquee_lamps: Array[OmniLight3D] = []
 var marquee_tiles: Array[MeshInstance3D] = []
 var studio_fx_clock := 0.0
@@ -359,6 +363,7 @@ func _animate_stage_lights(delta: float) -> void:
 
 func _rebuild_studio() -> void:
  board_marks.clear()
+ bridge_lights.clear()
  marquee_lamps.clear()
  marquee_tiles.clear()
  studio_fx_clock=0.0
@@ -367,8 +372,8 @@ func _rebuild_studio() -> void:
  studio = Node3D.new()
  studio.name = "WolfpackStudio_%s" % mode
  add_child(studio)
- _box(studio,Vector3(23,0.35,19),Vector3(0,-0.3,0),Color("#131b27"))
- _box(studio,Vector3(23,8,0.35),Vector3(0,3.4,-8.2),Color("#111723"))
+ _box(studio,Vector3(25,0.35,29),Vector3(0,-0.3,-3.8),Color("#131b27"))
+ _box(studio,Vector3(25,8,0.35),Vector3(0,3.4,-14.2),Color("#111723"))
  for i in range(9):
   var x := (float(i)-4.0)*2.6
   _box(studio,Vector3(0.08,7.0,0.14),Vector3(x,3.1,-7.9),RED,true)
@@ -381,10 +386,13 @@ func _rebuild_studio() -> void:
   _box(studio,Vector3(0.10,0.075,1.1),Vector3(sin(theta)*8.2,0.03,cos(theta)*6.4-0.5),RED,true)
  _text(studio,"THE HUNT" if mode == "hunt" else "BEAT THE WOLFPACK",Vector3(0,5.1,-7.65),125,0.007,WHITE)
  _add_stage_spectacle()
- _arch(studio,7.7,-7.3)
- entrance_banner=_text(studio,"HUNTER'S LAIR",Vector3(7.7,4.45,-6.52),42,0.005,WHITE)
+ if mode=="hunt":
+  _build_lair_bridge()
+ else:
+  _arch(studio,7.7,-7.3)
+ entrance_banner=_text(studio,"HUNTER'S LAIR",Vector3(8.55,5.3,-10.9) if mode=="hunt" else Vector3(7.7,4.45,-6.52),42,0.005,WHITE)
  entrance_light=OmniLight3D.new()
- entrance_light.position=Vector3(7.7,3.0,-6.2)
+ entrance_light.position=Vector3(8.6,4.0,-11.0) if mode=="hunt" else Vector3(7.7,3.0,-6.2)
  entrance_light.light_color=RED
  entrance_light.light_energy=4.5
  entrance_light.omni_range=8
@@ -415,38 +423,84 @@ func _rebuild_studio() -> void:
  _box(host_avatar,Vector3(0.58,0.23,0.44),Vector3(0,2.50,0),Color("#b76542"))
  _text(studio,"ARIANNA DAWSON",Vector3(-8.4,3.0,-1.9),42,0.004,WHITE)
  hunter_avatar = _featured_hunter("The Professor")
- hunter_avatar.position=Vector3(7.7,0,-6.8)
+ hunter_avatar.position=Vector3(8.55,1.0,-11.15) if mode=="hunt" else Vector3(7.7,0,-6.8)
  hunter_avatar.visible=false
  contestant_avatar = _avatar(studio,Color("#a41e31"),SKIN)
  contestant_avatar.position=Vector3(0,0,4.0)
  contestant_avatar.visible=false
  _update_3d_screens()
 
+func _bridge_segment(a: Vector3,b: Vector3,index: int) -> void:
+ var direction:=b-a
+ var distance:=direction.length()
+ var midpoint: Vector3=(a+b)*0.5
+ var angle: float=atan2(direction.x,direction.z)
+ var slab:=_box(studio,Vector3(2.3,0.27,distance+0.1),midpoint+Vector3(0,-0.20,0),Color("#1a202c"))
+ slab.rotation.y=angle
+ for side in [-1.0,1.0]:
+  var offset:=Vector3(cos(angle)*side*1.14,0,-sin(angle)*side*1.14)
+  var rail:=_box(studio,Vector3(0.15,0.11,distance+0.1),midpoint+offset+Vector3(0,0.04,0),ORANGE if side>0 else RED,true)
+  rail.rotation.y=angle
+  bridge_lights.append(rail)
+ var strips:int=maxi(2,int(distance/0.65))
+ for n in range(strips):
+  var t:float=(float(n)+0.5)/float(strips)
+  var point:Vector3=a.lerp(b,t)
+  var bar:=_box(studio,Vector3(1.75,0.035,0.13),point+Vector3(0,-0.04,0),RED if (n+index)%2==0 else ORANGE,true)
+  bar.rotation.y=angle
+  bridge_lights.append(bar)
+ for t in [0.22,0.78]:
+  var point:Vector3=a.lerp(b,t)
+  _box(studio,Vector3(0.22,1.05,0.22),point+Vector3(0,-0.76,0),Color("#40404a"))
+
+func _build_lair_bridge() -> void:
+ # Lair is a detached high platform; bridge slopes toward the Hunter's chair.
+ entrance_waypoints=[
+  Vector3(8.55,1.0,-11.15),
+  Vector3(8.55,1.0,-9.0),
+  Vector3(7.9,0.72,-6.4),
+  Vector3(6.3,0.40,-4.65),
+  Vector3(3.55,0.0,-3.48),
+  Vector3(0.0,0.0,-3.45)
+ ]
+ _box(studio,Vector3(5.8,1.25,4.25),Vector3(8.55,0.44,-11.3),Color("#28212b"))
+ _box(studio,Vector3(5.9,0.13,4.35),Vector3(8.55,1.13,-11.3),ORANGE,true)
+ _arch(studio,8.55,-12.6)
+ _text(studio,"THE HUNTER'S LAIR",Vector3(8.55,5.65,-11.8),51,0.005,WHITE)
+ for i in range(entrance_waypoints.size()-2):
+  _bridge_segment(entrance_waypoints[i],entrance_waypoints[i+1],i)
+ # Final approach is a floor-level pathway ending directly at the Hunter seat.
+ _bridge_segment(entrance_waypoints[entrance_waypoints.size()-2],entrance_waypoints.back(),4)
+ for x in [6.2,8.55,10.9]:
+  _box(studio,Vector3(0.13,1.6,0.17),Vector3(x,2.1,-11.4),RED,true)
+
 func _build_hunt_table() -> void:
- # Wide seated table, separate Hunter and contestant positions, not a runway.
- _box(studio,Vector3(8.6,0.25,4.5),Vector3(0,0.7,-0.2),DARK)
- _box(studio,Vector3(8.1,0.75,4.25),Vector3(0,1.05,-0.2),BLUE)
- _box(studio,Vector3(8.9,0.2,4.75),Vector3(0,1.52,-0.2),Color("#889ca7"))
- _box(studio,Vector3(8.9,0.055,4.78),Vector3(0,1.66,-0.2),Color("#1c2531"))
- # Layered television-style desk fascia with an illuminated sweep.
- _box(studio,Vector3(9.0,0.16,0.25),Vector3(0,1.65,2.12),RED,true)
- _box(studio,Vector3(9.15,0.11,0.25),Vector3(0,0.53,2.14),ORANGE,true)
- for x in [-3.4,-2.4,2.4,3.4]:
-  _box(studio,Vector3(0.07,0.7,0.15),Vector3(x,0.95,2.19),RED,true)
- for edge in [-4.42,4.42]:
-  _box(studio,Vector3(0.10,0.17,4.78),Vector3(edge,1.7,-0.2),ORANGE,true)
+ # Table rises toward the Hunter; only the playing surface tilts, keeping
+ # the cash fascia and rear broadcast displays upright and readable.
+ _box(studio,Vector3(8.65,0.35,4.55),Vector3(0,0.62,-0.20),DARK)
+ _box(studio,Vector3(8.2,0.85,4.22),Vector3(0,1.05,-0.20),BLUE)
+ tilt_table=Node3D.new()
+ tilt_table.name="SlopedChaseTable"
+ tilt_table.position=Vector3(0,1.55,-0.2)
+ tilt_table.rotation_degrees.x=-9.0
+ studio.add_child(tilt_table)
+ _box(tilt_table,Vector3(8.96,0.23,4.78),Vector3.ZERO,Color("#a2b0ba"))
+ _box(tilt_table,Vector3(8.96,0.065,4.8),Vector3(0,0.15,0),Color("#172431"))
+ for x in [-4.4,4.4]:
+  _box(tilt_table,Vector3(0.10,0.20,4.79),Vector3(x,0.23,0),ORANGE,true)
  for i in range(7):
-  var row_z := -1.75+float(i)*0.55
-  _box(studio,Vector3(6.3,0.035,0.47),Vector3(0,1.70,row_z),RED if i%2==0 else BLUE,true)
-  var marker:=_text(studio,str(i+1),Vector3(-3.0,1.84,row_z),30,0.004,WHITE)
+  var row_z:float=-1.80+float(i)*0.55
+  _box(tilt_table,Vector3(6.45,0.04,0.47),Vector3(0,0.21,row_z),RED if i%2==0 else BLUE,true)
+  var marker:=_text(tilt_table,str(i+1),Vector3(-3.0,0.39,row_z),30,0.004,WHITE)
   board_marks.append(marker)
- # Front-of-table team prize LED
- _box(studio,Vector3(7.95,0.95,0.11),Vector3(0,1.05,2.08),DARK)
- _box(studio,Vector3(8,0.06,0.13),Vector3(0,1.53,2.10),RED,true)
- table_prize=_text(studio,"TEAM PRIZE   $0",Vector3(0,1.08,2.22),73,0.007,WHITE)
+ for x in [-3.4,-2.4,2.4,3.4]:
+  _box(studio,Vector3(0.085,0.72,0.15),Vector3(x,0.94,2.20),RED,true)
+ _box(studio,Vector3(8.35,1.0,0.12),Vector3(0,1.04,2.18),DARK)
+ _box(studio,Vector3(8.45,0.09,0.19),Vector3(0,1.55,2.22),ORANGE,true)
+ _box(studio,Vector3(8.45,0.09,0.19),Vector3(0,0.51,2.22),RED,true)
+ table_prize=_text(studio,"TEAM PRIZE   $0",Vector3(0,1.08,2.36),72,0.007,WHITE)
  _box(studio,Vector3(9.2,1.65,0.18),Vector3(0,3.0,-7.3),DARK)
  prize_label=_text(studio,"TEAM PRIZE   $0",Vector3(0,3.0,-7.12),70,0.008,WHITE)
- # Clock visible beside contestant
  _box(studio,Vector3(4.35,1.85,0.22),Vector3(-6.1,2.25,3.2),DARK)
  _box(studio,Vector3(4.35,0.13,0.28),Vector3(-6.1,3.2,3.2),RED,true)
  stage_clock=_text(studio,"02:00",Vector3(-6.1,2.22,3.37),117,0.009,WHITE)
