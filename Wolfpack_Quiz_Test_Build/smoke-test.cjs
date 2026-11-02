@@ -91,6 +91,12 @@ for(const view of ['stage','close','entrance','den'])assert.ok(output.includes('
 const stageCode=fs.readFileSync(require('node:path').join(__dirname,'app/stage3d.js'),'utf8');
 for(const item of ['buildHunt','buildWolfpack','buildDen','updateDen','HUNTER DEN — LIVE','ENTRANCE TUNNEL','studioLights','stageArch','curvedDesk','mainFloor','ringPlatform','floorChevron','verticalWallFrames'])assert.ok(stageCode.includes(item),'Missing 3D stage component: '+item);
 assert.ok(stageCode.includes('THE GIRL GENIUS'),'Jenny stage station missing');
+assert.ok(stageCode.includes('function buildChaseLedTable(compact=false)'),'Chase-style longitudinal Wolfpack LED table missing');
+assert.ok(stageCode.includes('for(let k=0;k<7;k++)'),'Seven-section board lighting missing');
+assert.ok(stageCode.includes("screen.rotation.x=-Math.PI/2"),'Table LED reveal must lie on physical playing surface');
+assert.ok(stageCode.includes("buildChaseLedTable(true)"),'Beat the Wolfpack must retain a distinct LED table');
+assert.ok(stageCode.includes("buildChaseLedTable(false)"),'The Hunt must have the dedicated Chase-style table');
+
 for(const marker of ['makeIntroLed','introCharacter','paintIntro','playIntroductions','stopIntroductions','updateIntroductions','SHADOW REVEAL','KARLI RAE','SCARLETT RAINES','ERIC HERRERA','JUSTIN SILVA','ABBY WARREN','JENNY KAY','THE RAVEN'])assert.ok(stageCode.includes(marker),'Missing Hunter LED intro element: '+marker);
 assert.ok(html.includes("window.wolfStage.playIntroductions([selectedHunter(s.round)])"),'Head-to-Head Hunter reveal is not wired to the intro');
 assert.ok(html.includes("window.wolfStage.playIntroductions([...friends,'The Raven'])"),'Beat the Wolfpack all-Hunter reveal missing');
