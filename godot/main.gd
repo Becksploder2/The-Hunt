@@ -343,6 +343,12 @@ func _add_stage_spectacle() -> void:
 func _animate_stage_lights(delta: float) -> void:
  studio_fx_clock+=delta
  studio_burst=maxf(0.0,studio_burst-delta*1.5)
+ walkway_phase+=delta
+ for i in range(bridge_lights.size()):
+  var bar:=bridge_lights[i]
+  if is_instance_valid(bar):
+   var lit:bool=walking and int(floor(walkway_phase*7.0))%maxi(1,bridge_lights.size())==i
+   bar.scale.y=1.65 if lit else 1.0
  var entrance_mode:=walking or phase=="entrance" or phase=="btw_intro"
  var pressure_mode:=phase=="head_to_head" and hunter_steps>=player_steps-1
  var period:=0.18 if entrance_mode else 0.42 if pressure_mode else 0.8
@@ -869,15 +875,15 @@ func _walk_out(hunter: String) -> void:
   hunter_avatar.queue_free()
  hunter_avatar=_featured_hunter(hunter)
  hunter_avatar.visible=true
- hunter_avatar.position=Vector3(7.7,0,-6.8)
+ hunter_avatar.position=entrance_waypoints[0] if mode=="hunt" and entrance_waypoints.size()>0 else Vector3(7.7,0,-6.8)
  hunter_target=Vector3(0,0,-3.45)
  walking=true
  walk_elapsed=0.0
  entrance_banner.text=hunter.to_upper() if entrance_banner != null else "HUNTER"
  if entrance_light != null:
   entrance_light.light_energy=8.0
- camera.position=Vector3(9.0,3.4,1.2)
- camera.look_at(Vector3(7.7,2.0,-6.1))
+ camera.position=Vector3(10.4,5.0,-7.2) if mode=="hunt" else Vector3(9.0,3.4,1.2)
+ camera.look_at(hunter_avatar.position+Vector3(0,1.9,0))
  music_director.play_entrance(hunter,mode)
  _text(studio,hunter.to_upper(),Vector3(0,4.1,-3.8),60,0.006,ORANGE)
 
@@ -885,11 +891,22 @@ func _process(delta: float) -> void:
  _animate_stage_lights(delta)
  if walking and hunter_avatar != null and is_instance_valid(hunter_avatar):
   walk_elapsed+=delta
-  var alpha:=clampf(walk_elapsed/4.1,0.0,1.0)
+  var total_duration:float=7.5 if mode=="hunt" else 4.1
+  var alpha:=clampf(walk_elapsed/total_duration,0.0,1.0)
   var ease:=alpha*alpha*(3.0-2.0*alpha)
-  hunter_avatar.position=Vector3(7.7,0,-6.8).lerp(hunter_target,ease)
-  hunter_avatar.rotation.y=sin(walk_elapsed*9.0)*0.065*(1.0-alpha)
-  camera.position=Vector3(9.0,3.4,1.2).lerp(Vector3(5.8,3.6,5.8),ease)
+  if mode=="hunt" and entrance_waypoints.size()>1:
+   var progress:float=ease*float(entrance_waypoints.size()-1)
+   var index:int=mini(int(floor(progress)),entrance_waypoints.size()-2)
+   var fraction:float=progress-float(index)
+   hunter_avatar.position=entrance_waypoints[index].lerp(entrance_waypoints[index+1],fraction)
+   var heading:Vector3=entrance_waypoints[index+1]-entrance_waypoints[index]
+   hunter_avatar.rotation.y=atan2(heading.x,heading.z)+PI
+   var over_bridge:=Vector3(10.2,5.7,-7.2).lerp(Vector3(4.7,3.8,4.1),ease)
+   camera.position=over_bridge
+  else:
+   hunter_avatar.position=Vector3(7.7,0,-6.8).lerp(hunter_target,ease)
+   hunter_avatar.rotation.y=sin(walk_elapsed*9.0)*0.065*(1.0-alpha)
+   camera.position=Vector3(9.0,3.4,1.2).lerp(Vector3(5.8,3.6,5.8),ease)
   camera.look_at(hunter_avatar.position+Vector3(0,1.9,0))
   if entrance_light != null:
    entrance_light.light_energy=5.0+sin(walk_elapsed*7.0)*2.0
