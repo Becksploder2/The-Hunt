@@ -86,6 +86,10 @@ var warning_light: OmniLight3D
 var show_camera: Camera3D
 var board_marks: Array[Label3D] = []
 var host_avatar: Node3D
+var marquee_lamps: Array[OmniLight3D] = []
+var marquee_tiles: Array[MeshInstance3D] = []
+var studio_fx_clock := 0.0
+var studio_burst := 0.0
 var walk_elapsed := 0.0
 var hunter_avatar: Node3D
 var hunter_target: Vector3
@@ -124,6 +128,7 @@ func _ready() -> void:
  music_importer.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
  ui.add_child(music_importer)
  music_importer.entrance_theme_changed.connect(_on_theme_changed)
+ music_importer.music_volume_changed.connect(_on_music_volume_changed)
  countdown = Timer.new()
  countdown.wait_time = 1.0
  countdown.timeout.connect(_tick)
@@ -299,8 +304,64 @@ func _featured_contestant(index: int) -> Node3D:
  model.scale.y=clampf(float(look.get("height_inches",66))/66.0,0.84,1.18)
  return model
 
+func _add_stage_spectacle() -> void:
+ # Sweeping ring of practical bulbs and staggered animated red/gold LED tiles.
+ # Mesh light bars are inexpensive and animate independently of the quiz HUD.
+ for i in range(20):
+  var angle := float(i)*TAU/20.0
+  var x := sin(angle)*9.3
+  var z := cos(angle)*6.5-0.4
+  var tile:=_box(studio,Vector3(0.58,0.085,0.86),Vector3(x,0.065,z),RED if i%2==0 else ORANGE,true)
+  tile.rotation.y=angle
+  marquee_tiles.append(tile)
+ for i in range(12):
+  var x := (float(i)-5.5)*1.8
+  var strip:=_box(studio,Vector3(0.95,0.18,0.16),Vector3(x,6.0,-7.66),RED if i%2==0 else ORANGE,true)
+  marquee_tiles.append(strip)
+ for i in range(6):
+  var pod:=OmniLight3D.new()
+  var angle:=float(i)*TAU/6.0
+  pod.position=Vector3(sin(angle)*6.2,5.4,cos(angle)*4.7-0.8)
+  pod.light_color=RED if i%2==0 else ORANGE
+  pod.light_energy=1.6
+  pod.omni_range=7.0
+  studio.add_child(pod)
+  marquee_lamps.append(pod)
+ # Illuminated side wings and layered tunnel surround.
+ for side in [-1.0,1.0]:
+  for height in [0.85,2.1,3.4,4.7]:
+   _box(studio,Vector3(0.24,0.12,2.5),Vector3(side*10.6,height,-4.8),ORANGE if height>3.0 else RED,true)
+ for index in range(5):
+  var y:=0.68+float(index)*0.63
+  _box(studio,Vector3(0.12,0.085,1.5),Vector3(5.96,y,-6.3),RED,true)
+  _box(studio,Vector3(0.12,0.085,1.5),Vector3(9.44,y,-6.3),ORANGE,true)
+
+func _animate_stage_lights(delta: float) -> void:
+ studio_fx_clock+=delta
+ studio_burst=maxf(0.0,studio_burst-delta*1.5)
+ var entrance_mode:=walking or phase=="entrance" or phase=="btw_intro"
+ var pressure_mode:=phase=="head_to_head" and hunter_steps>=player_steps-1
+ var period:=0.18 if entrance_mode else 0.42 if pressure_mode else 0.8
+ var sequence:=int(floor(studio_fx_clock/period))
+ for i in range(marquee_tiles.size()):
+  var tile:=marquee_tiles[i]
+  if is_instance_valid(tile):
+   var active: bool=(i+sequence)%4<=1
+   tile.scale.y=1.25 if active else 0.65
+   tile.visible=active or studio_burst>0.05
+ for i in range(marquee_lamps.size()):
+  var lamp:=marquee_lamps[i]
+  if is_instance_valid(lamp):
+   var strength:=0.75+0.5*(1.0+sin(studio_fx_clock*(7.0 if entrance_mode else 2.0)+float(i)*1.2))
+   lamp.light_energy=strength+studio_burst*2.4
+ if entrance_light != null and is_instance_valid(entrance_light) and not walking:
+  entrance_light.light_energy=(3.5+1.2*sin(studio_fx_clock*1.8)) if entrance_mode else 2.2
+
 func _rebuild_studio() -> void:
  board_marks.clear()
+ marquee_lamps.clear()
+ marquee_tiles.clear()
+ studio_fx_clock=0.0
  if studio != null:
   studio.queue_free()
  studio = Node3D.new()
@@ -319,6 +380,7 @@ func _rebuild_studio() -> void:
   var theta := float(i)*TAU/8.0
   _box(studio,Vector3(0.10,0.075,1.1),Vector3(sin(theta)*8.2,0.03,cos(theta)*6.4-0.5),RED,true)
  _text(studio,"THE HUNT" if mode == "hunt" else "BEAT THE WOLFPACK",Vector3(0,5.1,-7.65),125,0.007,WHITE)
+ _add_stage_spectacle()
  _arch(studio,7.7,-7.3)
  entrance_banner=_text(studio,"HUNTER'S LAIR",Vector3(7.7,4.45,-6.52),42,0.005,WHITE)
  entrance_light=OmniLight3D.new()
@@ -552,6 +614,9 @@ func _show_importer() -> void:
   back.queue_free()
  )
 
+func _on_music_volume_changed(value: float) -> void:
+ music_director.set_entrance_volume(value)
+
 func _on_theme_changed(_mode: String,_hunter: String,_path: String) -> void:
  message="Hunter entrance theme saved locally."
 
@@ -691,6 +756,7 @@ func _respond(choice: int) -> void:
  var correct: bool=choice==int(active_question[2])
  answer_number+=1
  if correct:
+  studio_burst=1.0
   right_answers+=1
   individual_money+=10000 if mode=="hunt" else 1000
  message="CORRECT! +$%s" % _money(10000 if mode=="hunt" else 1000) if correct else "Incorrect."
@@ -762,6 +828,7 @@ func _walk_out(hunter: String) -> void:
  _text(studio,hunter.to_upper(),Vector3(0,4.1,-3.8),60,0.006,ORANGE)
 
 func _process(delta: float) -> void:
+ _animate_stage_lights(delta)
  if walking and hunter_avatar != null and is_instance_valid(hunter_avatar):
   walk_elapsed+=delta
   var alpha:=clampf(walk_elapsed/4.1,0.0,1.0)
@@ -850,6 +917,7 @@ func _h2h_question() -> void:
   _button(active_question[1][i],func() -> void:
    var correct: bool=selected==int(active_question[2])
    if correct:
+    studio_burst=1.0
     player_steps+=1
    else:
     hunter_steps+=1
