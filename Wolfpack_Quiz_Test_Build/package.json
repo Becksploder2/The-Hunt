@@ -21,6 +21,7 @@
     "productName": "Wolfpack Quiz Games",
     "files": [
       "main.js",
+      "preload.js",
       "app/**/*",
       "package.json",
       "app/stage3d.bundle.js"
