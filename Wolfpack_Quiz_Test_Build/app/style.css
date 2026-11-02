@@ -149,3 +149,16 @@ textarea{min-height:95px}
 .creator-page h1,.creator-page h2,.creator-page p{overflow-wrap:anywhere}
 .creator-page .btnrow button{min-height:52px;white-space:normal;text-align:center}
 @media(max-width:650px){.creator-page .grid{display:grid;grid-template-columns:minmax(0,1fr)}.creator-page .card{padding:17px}.creator-page select{font-size:16px!important}}
+
+/* Red-and-black Wolfpack broadcast time/cash graphic, inspired by the compact
+   on-air format of a quiz show rather than its original blue metallic HUD. */
+.hunt-tv-bug{display:grid;grid-template-columns:minmax(140px,1.2fr) minmax(170px,1.45fr) minmax(90px,.7fr);gap:0;max-width:720px;margin:12px 0 18px;border:3px solid #ed3044;border-radius:5px;overflow:hidden;background:#060606;box-shadow:0 7px 24px #0009,0 0 0 2px #15030a;color:#fff;font-variant-numeric:tabular-nums}
+.hunt-tv-bug>div{display:flex;flex-direction:column;justify-content:center;align-items:center;min-height:82px;padding:8px 13px;border-right:2px solid #9c172c}
+.hunt-tv-bug>div:last-child{border-right:0}
+.tv-bug-time{background:linear-gradient(180deg,#be1730 0%,#8b0c20 100%)}
+.tv-bug-money{background:linear-gradient(180deg,#181818,#050505)}
+.tv-bug-round{background:linear-gradient(180deg,#550914,#170406)}
+.tv-bug-label{font-size:clamp(10px,1.2vw,13px);font-weight:800;letter-spacing:.14em;color:#fff;opacity:.92}
+.tv-bug-digits,.tv-bug-money strong,.tv-bug-round strong{font-family:Arial,Segoe UI,sans-serif;font-size:clamp(26px,3.6vw,42px);font-weight:900;line-height:1.17;letter-spacing:.015em;text-shadow:0 2px 2px #0008}
+.tv-bug-money strong{color:#fff}
+@media(max-width:480px){.hunt-tv-bug{grid-template-columns:1fr 1.2fr .7fr}.hunt-tv-bug>div{min-height:66px;padding:7px 5px}.tv-bug-digits,.tv-bug-money strong,.tv-bug-round strong{font-size:clamp(17px,5vw,27px)}.tv-bug-label{font-size:9px;letter-spacing:.03em}}
