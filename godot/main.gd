@@ -165,9 +165,10 @@ func _ready() -> void:
 
 func _setup_world() -> void:
  camera = Camera3D.new()
- camera.position = Vector3(0, 8.8, 16.5)
+ camera.position = Vector3(0, 9.3, 23.5)
+ camera.fov = 73.0
  add_child(camera)
- camera.look_at(Vector3(0, 1.2, -1.0))
+ camera.look_at(Vector3(0, 2.0, -3.0))
  camera.current = true
  var sun := DirectionalLight3D.new()
  sun.rotation_degrees = Vector3(-60,-30,0)
@@ -407,15 +408,10 @@ func _rebuild_studio() -> void:
  studio = Node3D.new()
  studio.name = "WolfpackStudio_%s" % mode
  add_child(studio)
- _box(studio,Vector3(25,0.35,29),Vector3(0,-0.3,-3.8),Color("#131b27"))
- _box(studio,Vector3(25,8,0.35),Vector3(0,3.4,-14.2),Color("#111723"))
- # Clear central sightline: no floating LED bars between cameras and table.
- _box(studio,Vector3(20,0.13,0.35),Vector3(0,6.35,-13.85),ORANGE,true)
- # Concentric overhead LED lighting rings across the studio.
- for radius in [3.0,4.5,6.0]:
-  _ring(studio,radius,Vector3(0,6.10,-0.7),RED if radius==4.5 else ORANGE)
- # Floor is intentionally restrained to emphasize real display walls.
- _text(studio,"THE HUNT" if mode == "hunt" else "BEAT THE WOLFPACK",Vector3(0,5.1,-7.65),125,0.007,WHITE)
+ _box(studio,Vector3(34,0.35,32),Vector3(0,-0.3,-3.4),Color("#131b27"))
+ _box(studio,Vector3(34,8,0.35),Vector3(0,3.4,-15.0),Color("#111723"))
+ # A single architectural light ribbon replaces layered floating signage.
+ _box(studio,Vector3(15.0,0.12,0.24),Vector3(0,7.0,-14.55),ORANGE,true)
  _build_uk_side_led_banks()
  if mode=="hunt":
   _build_lair_bridge()
@@ -423,7 +419,7 @@ func _rebuild_studio() -> void:
   _build_host_rear_screen()
  else:
   _arch(studio,7.7,-7.3)
- entrance_banner=_text(studio,"HUNTER'S LAIR",Vector3(8.55,5.3,-10.9) if mode=="hunt" else Vector3(7.7,4.45,-6.52),42,0.005,WHITE)
+ entrance_banner=_text(studio,"",Vector3(8.55,5.3,-10.9) if mode=="hunt" else Vector3(7.7,4.45,-6.52),42,0.005,WHITE)
  entrance_light=OmniLight3D.new()
  entrance_light.position=Vector3(8.6,4.0,-11.0) if mode=="hunt" else Vector3(7.7,3.0,-6.2)
  entrance_light.light_color=RED
@@ -439,8 +435,8 @@ func _rebuild_studio() -> void:
  # UK-style vertical banks now frame the outside of the set.
  for side in [-1.0,1.0]:
   var spotlight := OmniLight3D.new()
-  spotlight.position=Vector3(8.2*side,5.2,1.3)
-  spotlight.light_color=ORANGE if side>0.0 else Color("#36afff")
+  spotlight.position=Vector3(12.8*side,5.2,-0.6)
+  spotlight.light_color=ORANGE if side>0.0 else RED
   spotlight.light_energy=3.4
   spotlight.omni_range=14
   studio.add_child(spotlight)
@@ -450,14 +446,14 @@ func _rebuild_studio() -> void:
   _build_btw_stage()
  # Arianna Dawson holds the host side of the stage.
  host_avatar=_avatar(studio,Color("#25212b"),SKIN,false,false)
- host_avatar.position=Vector3(-8.4,0,-2.0)
+ host_avatar.position=Vector3(-9.8,0,-3.4)
  _box(host_avatar,Vector3(0.58,0.23,0.44),Vector3(0,2.50,0),Color("#b76542"))
- _text(studio,"ARIANNA DAWSON",Vector3(-8.4,3.0,-1.9),42,0.004,WHITE)
+ _text(studio,"ARIANNA DAWSON",Vector3(-9.8,3.0,-3.3),42,0.004,WHITE)
  hunter_avatar = _featured_hunter("The Professor")
  hunter_avatar.position=Vector3(8.55,1.0,-11.15) if mode=="hunt" else Vector3(7.7,0,-6.8)
  hunter_avatar.visible=false
  contestant_avatar = _avatar(studio,Color("#a41e31"),SKIN)
- contestant_avatar.position=Vector3(0,0,4.0)
+ contestant_avatar.position=Vector3(0,0,6.3)
  contestant_avatar.visible=false
  _update_3d_screens()
 
@@ -1111,7 +1107,7 @@ func _head_to_head() -> void:
  if contestant_avatar != null and is_instance_valid(contestant_avatar):
   contestant_avatar.queue_free()
  contestant_avatar=_featured_contestant(contestant_index)
- contestant_avatar.position=Vector3(0,0,4.0)
+ contestant_avatar.position=Vector3(0,0,6.3)
  contestant_avatar.rotation.y=PI
  contestant_avatar.visible=true
  camera.position=Vector3(0,7.4,13.8)
