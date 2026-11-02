@@ -329,7 +329,7 @@ function finish(win){
  if(win&&s.phase==='duel')s.money=Math.max(1000,s.money)*s.opponents;
  stats.shows++;if(win){stats.wins++;stats.earnings+=s.money}save('wolf_stats',stats);
  const amount=win?'$'+s.money.toLocaleString():'$0';
- const split=win&&(s.phase==='final'||s.phase==='finalHunter')?(s.allCaught?' · $1,000 for each of the four original contestants':' · $'+Math.floor(s.money/s.survivors).toLocaleString()+' per surviving contestant'):'';
+ const split=win&&(s.phase==='final'||s.phase==='finalHunter')?(s.allCaught?' · $'+Math.floor(s.money/4).toLocaleString()+' for each of the four original contestants':' · $'+Math.floor(s.money/s.survivors).toLocaleString()+' per surviving contestant'):'';
  end((win?'VICTORY — ':'DEFEAT — ')+(win?(s.mode==='trials'?'The Raven defeated! Become a Hunter unlocked. ':'Prize won: '+amount+split):'The Wolfpack wins.'));
 }
 function end(msg){
