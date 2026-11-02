@@ -1,0 +1,37 @@
+name: Godot 4 The Hunt Validation and Desktop Exports
+on:
+  push:
+    branches: [main]
+    paths:
+      - "godot/**"
+      - ".github/workflows/godot.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  godot:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: chickensoft-games/setup-godot@v2
+        with:
+          version: 4.4.1
+          use-dotnet: false
+          include-templates: true
+      - name: Import and validate Godot project
+        run: godot --headless --path godot --import --quit
+      - name: Validate playable main scene
+        run: timeout 20s godot --headless --path godot --quit-after 90 || test "$?" -eq 124
+      - name: Export Windows desktop
+        run: |
+          mkdir -p dist
+          godot --headless --path godot --export-release "Windows Desktop" ../dist/The-Hunt-Godot.exe
+      - name: Export macOS app
+        run: |
+          godot --headless --path godot --export-release "macOS" ../dist/The-Hunt-Godot.app
+      - name: Upload desktop exports
+        uses: actions/upload-artifact@v4
+        with:
+          name: The-Hunt-Godot-Windows-macOS
+          path: dist/*
+          if-no-files-found: error
