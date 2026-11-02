@@ -57,6 +57,7 @@ assert.ok(output.includes('hunt-tv-bug'),'Red and black broadcast bug missing');
 assert.ok(output.includes('Start Cash Builder'),'Cash Builder opening step missing');
 vm.runInContext('session.phase="builder";advance()',context,{timeout:3000});
 assert.ok(output.includes('data-answer='),'Cash Builder answer buttons did not start');
+assert.ok(output.includes('broadcast-question')&&output.includes('broadcast-answer'),'Broadcast-style answer boxes missing');
 assert.equal(vm.runInContext('session.clock',context),120,'The Hunt Cash Builder must begin with two minutes');
 assert.ok(output.includes('CASH BUILDER · 10 QUESTIONS'),'Ten-question Cash Builder label missing');
 assert.ok(output.includes('con_hair')===false,'Contestant creator must not overlap playing stage');
@@ -68,7 +69,6 @@ assert.equal(vm.runInContext('session.perfectBuilderCount',context),1,'A perfect
 assert.equal(vm.runInContext('session.roundMoney',context),105000,'Perfect 10/10 with 57 seconds left must award $5,000 on top of $100,000');
 assert.equal(vm.runInContext('session.phase',context),'qualIntro','Ten answered questions must finish the round');
 
-assert.ok(output.includes('broadcast-question')&&output.includes('broadcast-answer'),'Broadcast-style answer boxes missing');
 verify('FACE THE RAVEN','session.phase="final";advance()');
 verify('BEAT THE WOLFPACK','start("btw")');
 assert.ok(output.includes('Hunter&#39;s Den')||output.includes("Hunter's Den"),'Hunter Den view missing');
