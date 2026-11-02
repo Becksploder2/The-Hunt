@@ -2,6 +2,7 @@ import * as THREE from 'three';
 const orange=0xff7900, black=0x090909;
 let wardenMode=false,wardenSign=null,wardenLight=null;
 let ledSurface=null,ledCtx=null,ledTexture=null,ledTimeline=null,ledPanel=null,introCam=null,cameraBeforeIntro=null;
+let professorPortrait=null,professorPortraitSrc='';
 let scene,camera,renderer,container,current='stage',mode='',animation,denCam,stageCam,closeCam,entranceCam,denDisplay,denReaction='WATCHING',denQuestion='LIVE QUESTION',denHunters=[];
 const makeMat=(color,emissive=0)=>new THREE.MeshStandardMaterial({color,roughness:.42,metalness:.28,emissive,emissiveIntensity:.23});
 const mDark=makeMat(0x111111),mMetal=makeMat(0x414141),mOrange=makeMat(orange,0x552200),mWhite=makeMat(0xffffff);
@@ -292,11 +293,17 @@ function paintIntro(name,elapsed){
  ctx.globalAlpha=shadow?.36:.2+enter*.12;ctx.fillStyle=glow;ctx.fillRect(0,0,1024,480);ctx.globalAlpha=1;
  for(let y=0;y<480;y+=12){ctx.fillStyle='rgba(114,185,225,.07)';ctx.fillRect(0,y,1024,2);}
  ctx.strokeStyle=p.accent;ctx.lineWidth=12;ctx.strokeRect(7,7,1010,466);
- ctx.save();ctx.beginPath();ctx.rect(270,34,500,395);ctx.clip();introCharacter(ctx,p,shadow,elapsed);ctx.restore();
+ ctx.save();ctx.beginPath();ctx.rect(270,34,500,395);ctx.clip();if(!shadow&&name==='The Professor'&&professorPortrait?.complete&&professorPortrait.naturalWidth>0){const iw=professorPortrait.naturalWidth,ih=professorPortrait.naturalHeight,scale=Math.max(430/iw,360/ih);ctx.drawImage(professorPortrait,512-iw*scale/2,52,iw*scale,ih*scale);}else introCharacter(ctx,p,shadow,elapsed);ctx.restore();
  ctx.fillStyle='#ffffff';ctx.textAlign='center';ctx.font='bold 48px Arial';ctx.fillText(shadow?'WHO IS THE HUNTER?':p.title,512,65,940);
  ctx.font='bold 35px Arial';ctx.fillStyle=shadow?'#ffb767':'#e9f4ff';ctx.fillText(shadow?'SHADOW REVEAL':p.name,512,431,940);
  if(!shadow){ctx.font='bold 20px Arial';ctx.fillStyle='#ffd99a';ctx.fillText(p.line,512,462,940);}
  ledTexture.needsUpdate=true;
+}
+function setProfessorPortrait(dataUrl){
+ if(!dataUrl||dataUrl===professorPortraitSrc)return;
+ professorPortraitSrc=dataUrl;
+ if(!dataUrl.startsWith('data:image/'))return;
+ const pic=new Image();pic.onload=()=>{professorPortrait=pic};pic.onerror=()=>{professorPortrait=null};pic.src=dataUrl;
 }
 function playIntroductions(names){
  const roster=(Array.isArray(names)?names:[names]).filter(n=>INTRO_HUNTERS[n]);
@@ -346,4 +353,4 @@ function render(modeValue='hunt',view='stage'){
 }
 function setView(view){current=['den','close','entrance'].includes(view)?view:'stage';const selected=current==='den'?denCam:current==='close'?closeCam:current==='entrance'?entranceCam:stageCam;if(ledTimeline)cameraBeforeIntro=selected;else camera=selected;}
 function destroy(){if(animation)cancelAnimationFrame(animation);animation=null;if(renderer){renderer.dispose();if(renderer.domElement?.parentNode)renderer.domElement.parentNode.removeChild(renderer.domElement);}renderer=null;container=null;scene=null;camera=null;wardenSign=null;wardenLight=null;ledPanel=null;ledTimeline=null;ledCtx=null;if(ledTexture)ledTexture.dispose();ledTexture=null;ledSurface=null;introCam=null;cameraBeforeIntro=null;}
-window.wolfStage={render,setView,destroy,updateDen,setWardenMode,playIntroductions,stopIntroductions};
+window.wolfStage={render,setView,destroy,updateDen,setWardenMode,playIntroductions,stopIntroductions,setProfessorPortrait};
