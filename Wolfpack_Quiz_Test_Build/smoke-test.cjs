@@ -51,8 +51,11 @@ verify('Music Importer','go("music")');
 for(const hunter of ['The Professor','The Red Raider','El Jefe','The Jet','The Warden','The Girl Genius','The Raven'])assert.ok(output.includes('data-music="'+hunter+'"'),'Missing music importer for '+hunter);
 assert.ok(output.includes('data-remove-music=')&&output.includes('data-stop-music='),'Music preview/remove controls missing');
 verify('Career Records','go("records")');
+for(const phrase of ['Let the Hunt Begin!','The Hunt Starts Here!',"You're in Their Territory Now!",'The Pack Is Closing In!','Run With the Pack… or Fall Behind!','Time to Face the Pack!','The Raven Awaits!',"There's Nowhere Left to Hide!"])assert.ok(html.includes(phrase),'Missing Wolfpack slogan: '+phrase);
 verify('CASH BUILDER','start("hunt")');
 assert.ok(output.includes('stage3d'),'The Hunt 3D stage container failed to render');
+assert.ok(output.includes('Let the Hunt Begin!'),'The Hunt opening slogan missing');
+assert.ok(output.includes('hunt-show-slogan'),'Stage catchphrase identifier missing');
 assert.ok(output.includes('hunt-tv-bug'),'Red and black broadcast bug missing');
 assert.ok(output.includes('Start Cash Builder'),'Cash Builder opening step missing');
 vm.runInContext('session.phase="builder";advance()',context,{timeout:3000});
@@ -71,6 +74,7 @@ assert.equal(vm.runInContext('session.phase',context),'qualIntro','Ten answered 
 
 verify('FACE THE RAVEN','session.phase="final";advance()');
 verify('BEAT THE WOLFPACK','start("btw")');
+assert.ok(output.includes('Time to Face the Pack!'),'Beat the Wolfpack motto missing');
 assert.ok(output.includes('Hunter&#39;s Den')||output.includes("Hunter's Den"),'Hunter Den view missing');
 verify('Wolfpack Showdown','session.phase="duel";advance()');
 verify('Hunter Offers','start("hunt");session.phase="offers";advance()');
