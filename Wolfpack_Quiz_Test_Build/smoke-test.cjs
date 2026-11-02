@@ -50,6 +50,12 @@ for(const select of ['host_hair','host_style','host_glasses','host_braces','host
 verify('Music Importer','go("music")');
 for(const hunter of ['The Professor','The Red Raider','El Jefe','The Jet','The Warden','The Girl Genius','The Raven'])assert.ok(output.includes('data-music="'+hunter+'"'),'Missing music importer for '+hunter);
 assert.ok(output.includes('data-remove-music=')&&output.includes('data-stop-music='),'Music preview/remove controls missing');
+assert.ok(html.includes('loadSavedHunterThemes')&&html.includes('window.wolfThemes.save'),'Imported Hunter themes must persist across launches');
+const electronMain=fs.readFileSync(require('node:path').join(__dirname,'main.js'),'utf8');
+const preload=fs.readFileSync(require('node:path').join(__dirname,'preload.js'),'utf8');
+assert.ok(electronMain.includes("wolf-themes:save")&&electronMain.includes("wolf-themes:list")&&electronMain.includes("wolf-themes:remove"),'Electron file-backed music storage missing');
+assert.ok(preload.includes('contextBridge.exposeInMainWorld'),'Safe persistent music bridge missing');
+
 verify('Career Records','go("records")');
 for(const phrase of ['Let the Hunt Begin!','The Hunt Starts Here!',"You're in Their Territory Now!",'The Pack Is Closing In!','Run With the Pack… or Fall Behind!','Time to Face the Pack!','The Raven Awaits!',"There's Nowhere Left to Hide!"])assert.ok(html.includes(phrase),'Missing Wolfpack slogan: '+phrase);
 verify('CASH BUILDER','start("hunt")');
@@ -110,6 +116,10 @@ for(const view of ['stage','close','entrance','den'])assert.ok(output.includes('
 const stageCode=fs.readFileSync(require('node:path').join(__dirname,'app/stage3d.js'),'utf8');
 for(const item of ['buildHunt','buildWolfpack','buildDen','updateDen','HUNTER DEN — LIVE','ENTRANCE TUNNEL','studioLights','stageArch','curvedDesk','mainFloor','ringPlatform','floorChevron','verticalWallFrames'])assert.ok(stageCode.includes(item),'Missing 3D stage component: '+item);
 assert.ok(stageCode.includes('THE GIRL GENIUS'),'Jenny stage station missing');
+assert.ok(stageCode.includes('buildWolfpackQuizTable')&&stageCode.includes('makeStageBroadcastDisplays'),'The Hunt seated table and large LED displays are missing');
+assert.ok(stageCode.includes('updateStageClock')&&stageCode.includes('clockTexture'),'3D contestant clock not wired to the gameplay');
+assert.ok(html.includes('window.wolfStage.updateStageClock'),'Game does not update the live 3D clock');
+
 assert.ok(stageCode.includes('setIntroHunterCallback')&&stageCode.includes('introHunterIndex'),'Hunter theme changes must follow animated reveal');
 assert.ok(html.includes('setIntroHunterCallback(playHunterTheme)'),'Hunter music not wired to stage introduction');
 assert.ok(stageCode.includes('makeTeamPrizeFascia')&&stageCode.includes('updateTeamPrize'),'The table must have an updatable team-prize LED fascia');
