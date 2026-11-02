@@ -93,29 +93,29 @@ function buildHunt(){
 }
 function buildWolfpack(){
  panelWall();mainFloor();truss();studioLights();stageArch();verticalWallFrames();doorway(-7.1,-7.28,'HUNTER ENTRANCE');
- for(let k=0;k<6;k++){const x=(k-2.5)*2.75;floorChevron(x,1.72,1);}
+ for(let k=0;k<7;k++){const x=(k-3)*2.23;floorChevron(x,1.72,1);}
  beamFace(0,2.85,-7.01,13.6,.28,mDark);
  textSurface('BEAT THE WOLFPACK',0,4.65,-7.03,11.4,1.05);
- // Six raised Hunter stations in a shallow arc, not a flat wall graphic.
- for(let i=0;i<6;i++){
-  const x=(i-2.5)*2.75,z=-3.8+Math.abs(i-2.5)*.35;
-  ringPlatform(x,.2,z,1.58,1.37,i===5?mWhite:mOrange);
+ // Seven raised Hunter stations in a shallow arc, not a flat wall graphic.
+ for(let i=0;i<7;i++){
+  const x=(i-3)*2.23,z=-3.8+Math.abs(i-3)*.32;
+  ringPlatform(x,.2,z,1.12,.94,i===6?mWhite:mOrange);
   cylinder(1.28,1.5,.4,x,.34,z,mMetal);
   cylinder(1.18,1.33,.14,x,.59,z,mOrange);
   block(2.48,1.5,1.18,x,1.42,z,mBlue);
   block(2.65,.17,1.43,x,2.29,z,mGlass);
   block(2.42,.15,.2,x,1.52,z+.66,mIce);
-  mannequin(x,z+.13,scene,i===5?mWhite:mDark);
-  const name=['THE PROFESSOR','THE RED RAIDER','EL JEFE','THE JET','THE WARDEN','THE RAVEN'][i];
+  mannequin(x,z+.13,scene,i===6?mWhite:mDark);
+  const name=['THE PROFESSOR','THE RED RAIDER','EL JEFE','THE JET','THE WARDEN','THE GIRL GENIUS','THE RAVEN'][i];
   textSurface(name,x,1.17,z+.68,2.38,.42);
   for(let j=0;j<3;j++)block(2.6,.045,.1,x,.83+j*.23,z+.69,mGold);
-  if(i===5){block(2.8,.14,1.48,x,2.47,z,mWhite);light(x,4.7,z,17)}
+  if(i===6){block(2.8,.14,1.48,x,2.47,z,mWhite);light(x,4.7,z,17)}
  }
  cylinder(1.65,1.8,.35,0,.24,4,mMetal);
  cylinder(1.49,1.61,.14,0,.5,4,mOrange);
  curvedDesk(0,1.8,4,2.8,'CONTESTANT');
  mannequin(0,3.15);
- textSurface('ONE CONTESTANT  ·  SIX HUNTERS',0,3.45,-7.02,8.4,.43);
+ textSurface('ONE CONTESTANT  ·  SEVEN HUNTERS',0,3.45,-7.02,8.4,.43);
  for(let x of [-7,0,7])light(x,5,-1,12);
 }
 function buildDen(group){
@@ -133,15 +133,15 @@ function buildDen(group){
  textSurface('HUNTER DEN — LIVE',0,4.4,-4.83,7.7,.37,group);
  const reaction=textSurface('WATCHING THE CONTESTANT',0,2.62,-4.82,7.8,.43,group);
  denReaction=reaction;
- for(let i=0;i<6;i++){
-   const x=(i-2.5)*2.55;
+ for(let i=0;i<7;i++){
+   const x=(i-3)*2.22;
    block(1.9,.5,1.3,x,.5,1.2,mOrange,group);
    block(1.9,1.2,.33,x,1.12,.57,mMetal,group);
    block(.23,.6,1.3,x-.95,.75,1.2,mMetal,group);
    block(.23,.6,1.3,x+.95,.75,1.2,mMetal,group);
-   const person=mannequin(x,1.12,group,i===5?mWhite:mDark);
+   const person=mannequin(x,1.12,group,i===6?mWhite:mDark);
    denHunters.push(person);
-   textSurface(['PROFESSOR','RED RAIDER','EL JEFE','THE JET','THE WARDEN','THE RAVEN'][i],x,.23,2.04,2.45,.3,group);
+   textSurface(['PROFESSOR','RED RAIDER','EL JEFE','THE JET','THE WARDEN','GIRL GENIUS','THE RAVEN'][i],x,.23,2.04,2.45,.3,group);
  }
  block(5,.5,1.6,0,.65,3.75,mMetal,group);
  block(2.1,3.9,.2,6.1,2,-5.1,mOrange,group);
