@@ -7,7 +7,7 @@ const app=document.getElementById('app');let screen='home',session=null,tick=nul
  {title:'The Red Raider',name:'Scarlett Raines',theme:'Fight Raiders Fight',show:'The Hunt',music:'Player import required',personality:'The Red Raider: fiery, determined and proudly Texas Tech. Compares opponents to Texas Tech football rivals and conference opponents.'},
  {title:'El Jefe',name:'Eric Herrera',theme:'Original entrance theme',show:'Both shows',music:'Prototype theme',personality:'The smartass: sarcastic, quick comebacks, playful condescension'},
  {title:'The Jet',name:'Justin Silva',theme:'Original entrance theme',show:'Both shows',music:'Prototype theme',country:'Canada',personality:'First Canadian Hunter. The group troll: mischievous, teasing, playful trash talk'},
- {title:'The Warden',name:'Abby Warren',theme:'Original rapid-fire entrance',show:'Both shows',music:'Original theme planned',speed:10,personality:'The Warden: quietly confident, friendly off the clock, exceptionally quick and relentless on the clock. Victoria Groce-style composure; nickname honors her mother’s former job.'},
+ {title:'The Warden',name:'Abby Warren',theme:'Lockdown (original theme cue)',show:'Both shows',music:'Original theme planned',speed:10,personality:'The Warden: friendly and composed off the clock; judge-and-warden verdicts, gavel imagery, and lightning-fast answers when in session. Her nickname honors her mother’s former job.'},
  {title:'The Girl Genius',name:'Jenny Kay',theme:'Original retro-game theme',show:'Both shows',music:'Original theme planned',appearance:'Pink hair with blonde streaks; glasses and braces',personality:'The Raven’s longtime school best friend. Bright, playful, retro-game obsessed, quick with 8-bit jokes and surprisingly strategic.'},
  {title:'The Raven',name:'Wolfpack Leader',theme:'Wings of the Raven',show:'Both shows',music:'Original theme planned',personality:'The Raven: composed quiz intellect, competitive retro-gaming wit and occasional self-deprecating humor.'}
 ];
@@ -17,7 +17,7 @@ let contestantIndex=0,showConfig=load('wolf_showConfig',{hunterSelection:'differ
 let stats=load('wolf_stats',{shows:0,wins:0,earnings:0}),importedTracks={},musicPlaying=null;
 function selectedHunter(round){return showConfig.hunterSelection==='same'?friends[0]:friends[round%friends.length]}
 function stopImportedMusic(){if(musicPlaying){musicPlaying.pause();musicPlaying.currentTime=0;musicPlaying=null}}
-function playHunterTheme(){if(!session||session.mode==='btw')return;let name=session.phase==='final'?'The Raven':selectedHunter(session.round),a=importedTracks[name];if(a){stopImportedMusic();musicPlaying=a;a.currentTime=0;a.play().catch(()=>{})}}
+function playHunterTheme(){if(!session||session.mode==='btw')return;let name=session.phase==='final'?'The Raven':selectedHunter(session.round),a=importedTracks[name];if(a){stopImportedMusic();musicPlaying=a;a.currentTime=0;a.play().catch(()=>{})}if(window.wolfStage?.setWardenMode)window.wolfStage.setWardenMode(name==='The Warden');}
 const CREATOR_HAIR=['Brown','Black','Dark Brown','Light Brown','Blonde','Auburn','Copper Red','Bright Red','Gray','White','Blue','Purple'];
 const CREATOR_GLASSES=['None','Black Frames','Orange Frames','Silver Frames','Thick Frames','Round Frames','Rimless'];
 const CREATOR_OUTFITS=['Black & Orange','Black Suit','Orange Suit','White Suit','Casual Shirt','Casual Jacket','Evening Wear','Sports Jersey'];
@@ -126,11 +126,11 @@ const hunterLines={
   defeat:'Okay, you win this round. Ill be back with better jokes.'
  },
  'The Warden':{
-  intro:'Welcome. I promise Ill make this quick.',
-  offer:'Your choice. Ill be ready either way.',
-  correct:'Next.',
-  wrong:'Good catch. Keep going.',
-  victory:'That was quick. Thank you for playing.',
+  intro:'All rise. The Warden is now in session.',
+  offer:'I will give you a chance at freedom. But it will cost you.',
+  correct:'Objection overruled. Next!',
+  wrong:'Sustained. Good catch. Next question.',
+  victory:'Guilty as charged. Case closed.',
   defeat:'You earned your freedom. Well played.'
  },
  'The Girl Genius':{
