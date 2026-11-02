@@ -53,6 +53,16 @@ const SLOGANS = {
  "final":"There's Nowhere Left to Hide!"
 }
 
+const HUNTER_SHOW_LOOKS = {
+ "The Professor":{"name":"KARLI-RAE GOMEZ","tagline":"CLASS IS IN SESSION","primary":Color("#8c1234"),"accent":Color("#eab55c"),"tempo":2.3},
+ "The Red Raider":{"name":"SCARLETT RAINES","tagline":"WRECK 'EM!","primary":Color("#df1028"),"accent":Color("#f3f4f6"),"tempo":5.8},
+ "El Jefe":{"name":"ERIC HERRERA","tagline":"YOU'RE IN MY HOUSE","primary":Color("#21476b"),"accent":Color("#e8bb72"),"tempo":3.1},
+ "The Jet":{"name":"JUSTIN SILVA","tagline":"TRY AND KEEP UP","primary":Color("#116ca2"),"accent":Color("#bce9fb"),"tempo":5.2},
+ "The Warden":{"name":"ABBY WARREN","tagline":"ALL RISE","primary":Color("#393a48"),"accent":Color("#df6f5c"),"tempo":2.7},
+ "The Girl Genius":{"name":"JENNY KAY","tagline":"PLAYER TWO HAS ENTERED","primary":Color("#e7439a"),"accent":Color("#f4d287"),"tempo":4.1},
+ "The Raven":{"name":"THE WOLFPACK LEADER","tagline":"WELCOME TO THE WOLFPACK","primary":Color("#171825"),"accent":Color("#fd791c"),"tempo":3.9}
+}
+
 var mode := "hunt"
 var phase := "menu"
 var question_index := 0
@@ -87,6 +97,17 @@ var show_camera: Camera3D
 var board_marks: Array[Label3D] = []
 var host_avatar: Node3D
 var bridge_lights: Array[MeshInstance3D] = []
+var hunter_tron: Node3D
+var tron_title: Label3D
+var tron_real_name: Label3D
+var tron_tagline: Label3D
+var tron_backdrop: MeshInstance3D
+var tron_frames: Array[MeshInstance3D] = []
+var tron_side_lights: Array[OmniLight3D] = []
+var tron_glow_strips: Array[MeshInstance3D] = []
+var tron_primary: Color = RED
+var tron_accent: Color = ORANGE
+var tron_active := false
 var entrance_waypoints: Array[Vector3] = []
 var tilt_table: Node3D
 var walkway_phase := 0.0
@@ -370,6 +391,10 @@ func _animate_stage_lights(delta: float) -> void:
 func _rebuild_studio() -> void:
  board_marks.clear()
  bridge_lights.clear()
+ tron_frames.clear()
+ tron_side_lights.clear()
+ tron_glow_strips.clear()
+ tron_active=false
  marquee_lamps.clear()
  marquee_tiles.clear()
  studio_fx_clock=0.0
@@ -394,6 +419,7 @@ func _rebuild_studio() -> void:
  _add_stage_spectacle()
  if mode=="hunt":
   _build_lair_bridge()
+  _build_hunter_titantron()
  else:
   _arch(studio,7.7,-7.3)
  entrance_banner=_text(studio,"HUNTER'S LAIR",Vector3(8.55,5.3,-10.9) if mode=="hunt" else Vector3(7.7,4.45,-6.52),42,0.005,WHITE)
@@ -435,6 +461,79 @@ func _rebuild_studio() -> void:
  contestant_avatar.position=Vector3(0,0,4.0)
  contestant_avatar.visible=false
  _update_3d_screens()
+
+func _build_hunter_titantron() -> void:
+ # Stage-left of the elevated cave, angled toward the main camera.
+ hunter_tron=Node3D.new()
+ hunter_tron.name="HunterTitantronRoot"
+ hunter_tron.position=Vector3(3.4,0,-11.7)
+ hunter_tron.rotation_degrees.y=-14.0
+ studio.add_child(hunter_tron)
+ _box(hunter_tron,Vector3(4.9,5.95,0.50),Vector3(0,3.1,-0.15),DARK)
+ tron_backdrop=_box(hunter_tron,Vector3(4.42,5.38,0.10),Vector3(0,3.15,0.18),Color("#150e1c"))
+ for i in range(9):
+  tron_glow_strips.append(_box(hunter_tron,Vector3(4.31,0.09,0.13),Vector3(0,1.05+float(i)*0.52,0.30),RED,true))
+ for x in [-2.4,2.4]:
+  tron_frames.append(_box(hunter_tron,Vector3(0.17,5.98,0.45),Vector3(x,3.12,0),ORANGE,true))
+  for y in [0.42,1.5,2.6,3.7,4.8,5.9]:
+   tron_glow_strips.append(_box(hunter_tron,Vector3(0.38,0.20,0.26),Vector3(x,y,0.28),RED,true))
+ for y in [0.18,6.05]:
+  tron_frames.append(_box(hunter_tron,Vector3(5.1,0.19,0.45),Vector3(0,y,0),ORANGE,true))
+ tron_title=_text(hunter_tron,"THE PROFESSOR",Vector3(0,4.15,0.44),90,0.0048,WHITE)
+ tron_real_name=_text(hunter_tron,"KARLI-RAE GOMEZ",Vector3(0,3.18,0.45),56,0.0045,WHITE)
+ tron_tagline=_text(hunter_tron,"CLASS IS IN SESSION",Vector3(0,1.7,0.47),49,0.0037,ORANGE)
+ _text(hunter_tron,"THE HUNT  •  HUNTER INTRODUCTION",Vector3(0,5.5,0.45),39,0.004,WHITE)
+ for i in range(4):
+  var side:=OmniLight3D.new()
+  side.position=Vector3(3.4 + (-3.0 if i%2==0 else 3.0),1.9+float(i/2)*2.65,-10.9)
+  side.light_color=RED
+  side.light_energy=1.4
+  side.omni_range=6.0
+  studio.add_child(side)
+  tron_side_lights.append(side)
+ _set_hunter_presentation("The Professor",false)
+
+func _set_hunter_presentation(hunter: String,make_entrance: bool=true) -> void:
+ if mode!="hunt" or tron_title==null or not is_instance_valid(tron_title):
+  return
+ var profile:Dictionary=HUNTER_SHOW_LOOKS.get(hunter,HUNTER_SHOW_LOOKS["The Raven"])
+ tron_primary=profile["primary"]
+ tron_accent=profile["accent"]
+ tron_title.text=hunter.to_upper()
+ tron_title.modulate=WHITE
+ tron_real_name.text=profile["name"]
+ tron_real_name.modulate=WHITE
+ tron_tagline.text=profile["tagline"]
+ tron_tagline.modulate=tron_accent
+ tron_backdrop.material_override=_mat(tron_primary.darkened(0.68),true)
+ for frame in tron_frames:
+  frame.material_override=_mat(tron_accent,true)
+ for i in range(tron_glow_strips.size()):
+  tron_glow_strips[i].material_override=_mat(tron_primary if i%3!=0 else tron_accent,true)
+ for i in range(tron_side_lights.size()):
+  tron_side_lights[i].light_color=tron_primary if i%2==0 else tron_accent
+ tron_active=make_entrance
+ if entrance_light!=null:
+  entrance_light.light_color=tron_primary
+ if entrance_banner!=null:
+  entrance_banner.modulate=tron_accent
+
+func _animate_titantron() -> void:
+ if not tron_active or tron_title==null or not is_instance_valid(tron_title):
+  return
+ var profile:Dictionary=HUNTER_SHOW_LOOKS.get(current_hunter,HUNTER_SHOW_LOOKS["The Raven"])
+ var tempo:float=float(profile["tempo"])
+ var strength:float=0.5+0.5*sin(studio_fx_clock*tempo)
+ var energetic:bool=walking or phase=="entrance"
+ var pulse:float=1.0 if energetic else 0.27
+ for i in range(tron_glow_strips.size()):
+  var bar:=tron_glow_strips[i]
+  if is_instance_valid(bar):
+   bar.visible=not energetic or (i+int(studio_fx_clock*tempo*2.0))%4!=0
+   bar.scale.y=0.8+0.55*strength*pulse
+ for lamp in tron_side_lights:
+  if is_instance_valid(lamp):
+   lamp.light_energy=0.8+strength*pulse*2.3
 
 func _bridge_segment(a: Vector3,b: Vector3,index: int) -> void:
  var direction:=b-a
@@ -879,6 +978,7 @@ func _walk_out(hunter: String) -> void:
  hunter_target=Vector3(0,0,-3.45)
  walking=true
  walk_elapsed=0.0
+ _set_hunter_presentation(hunter)
  entrance_banner.text=hunter.to_upper() if entrance_banner != null else "HUNTER"
  if entrance_light != null:
   entrance_light.light_energy=8.0
@@ -889,6 +989,7 @@ func _walk_out(hunter: String) -> void:
 
 func _process(delta: float) -> void:
  _animate_stage_lights(delta)
+ _animate_titantron()
  if walking and hunter_avatar != null and is_instance_valid(hunter_avatar):
   walk_elapsed+=delta
   var total_duration:float=7.5 if mode=="hunt" else 4.1
@@ -937,6 +1038,7 @@ func _hunter_sits_and_speaks() -> void:
  _label(message)
 
 func _show_offers() -> void:
+ tron_active=true
  camera.position=Vector3(0,7.4,13.8)
  camera.look_at(Vector3(0,1.3,-1.0))
  phase="offers"
