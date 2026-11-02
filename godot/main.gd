@@ -911,6 +911,8 @@ func _start_show(chosen_mode: String) -> void:
  double_or_nothing=false
  message=SLOGANS.opening if mode=="hunt" else SLOGANS.btw
  _rebuild_studio()
+ camera.position=Vector3(0,9.3,23.5)
+ camera.look_at(Vector3(0,2.0,-3.0))
  _builder_intro()
 
 func _builder_intro() -> void:
