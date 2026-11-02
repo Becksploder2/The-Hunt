@@ -26,7 +26,7 @@ verify('Question Creator','go("create")');
 for(const name of ['The Professor','Karli Rae','The Red Raider','Scarlett Raines','El Jefe','Eric Herrera','The Jet','Justin Silva','The Warden','Abby Warren','The Girl Genius','Jenny Kay','The Raven'])assert.ok(output.includes(name),'Missing roster entry '+name);
 assert.ok(output.includes('Eric Herrera'),'Eric full name missing');
 assert.ok(output.includes('Justin Silva'),'Justin full name missing');
-assert.ok(output.includes('Victoria Groce'),'Abby personality model missing');
+assert.ok(output.includes('judge-and-warden verdicts'),'Abby Warden persona missing');
 assert.ok(output.includes('Anne Hegerty and Jenny Ryan'),'Karli personality blend missing');
 assert.equal(vm.runInContext('hunterResponseDelay({selectedHunters:["The Warden"]})',context),1,'Abby must answer fastest');
 assert.equal(vm.runInContext('hunterResponseDelay({selectedHunters:["El Jefe"]})',context),3,'Other Hunters should differ in speed');
