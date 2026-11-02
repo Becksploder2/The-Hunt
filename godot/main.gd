@@ -626,13 +626,13 @@ func _build_hunt_table() -> void:
  _box(studio,Vector3(5.2,0.32,1.3),Vector3(0,1.53,-4.05),RED,true)
  _text(studio,"HUNTER POSITION",Vector3(0,1.56,-3.35),43,0.004,WHITE)
  _seat(Vector3(0,0.75,-4.80))
- # Increased incline (16 degrees) and a 0.9m forward shift give the tabletop
- # a stronger Chase-like silhouette without shifting the host screens.
+ # Keep the 16-degree incline and forward shift; with positive X rotation,
+ # the rear (-Z) Hunter end is higher than the front (+Z) contestant end.
  _box(studio,Vector3(4.34,0.83,7.15),Vector3(0,0.77,0.83),BLUE)
  tilt_table=Node3D.new()
  tilt_table.name="SlopedChaseTable"
  tilt_table.position=Vector3(0,1.75,0.78)
- tilt_table.rotation_degrees.x=-16.0
+ tilt_table.rotation_degrees.x=16.0
  studio.add_child(tilt_table)
  _box(tilt_table,Vector3(4.52,0.21,7.55),Vector3.ZERO,Color("#8c9bac"))
  _box(tilt_table,Vector3(4.55,0.06,7.56),Vector3(0,0.14,0),Color("#1a2231"))
