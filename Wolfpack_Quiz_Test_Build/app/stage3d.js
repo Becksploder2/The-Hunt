@@ -133,7 +133,10 @@ function updateStageClock(phase='CASH BUILDER',seconds=120,earnings=0){
  ctx.fillStyle='#ffffff';ctx.font='bold 38px Arial';ctx.fillText(label,512,29,950);
  const digits=String(Math.floor(value/60)).padStart(2,'0')+':'+String(value%60).padStart(2,'0');
  ctx.fillStyle='#f9fafb';ctx.font='bold 145px Arial';ctx.fillText(digits,512,150,950);
- ctx.fillStyle='#ffc8d0';ctx.font='bold 25px Arial';ctx.fillText('CASH 
+ ctx.fillStyle='#ffc8d0';ctx.font='bold 25px Arial';ctx.fillText('CASH '+String.fromCharCode(36)+(Number(earnings)||0).toLocaleString('en-US'),512,237,940);
+ clockTexture.needsUpdate=true;
+}
+function buildChaseLedTable(compact=false){
  if(!compact){buildWolfpackQuizTable();return;}
 
  const front=compact?1.15:3.45;
