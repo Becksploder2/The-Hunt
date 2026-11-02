@@ -31,7 +31,7 @@ async function loadSavedHunterThemes(){
     importedTracks[hunter]=new Audio(URL.createObjectURL(blob));importedTrackNames[hunter]=track.name||'Saved theme';
    }
    themesLoaded=true;
-  }catch(err){console.warn('Could not load saved Hunter themes',err)}
+  }catch(err){themesLoaded=true;console.warn('Could not load saved Hunter themes',err)}
   finally{themeLoading=null}
  })();
  return themeLoading;
