@@ -93,6 +93,12 @@ for(const view of ['stage','close','entrance','den'])assert.ok(output.includes('
 const stageCode=fs.readFileSync(require('node:path').join(__dirname,'app/stage3d.js'),'utf8');
 for(const item of ['buildHunt','buildWolfpack','buildDen','updateDen','HUNTER DEN — LIVE','ENTRANCE TUNNEL','studioLights','stageArch','curvedDesk','mainFloor','ringPlatform','floorChevron','verticalWallFrames'])assert.ok(stageCode.includes(item),'Missing 3D stage component: '+item);
 assert.ok(stageCode.includes('THE GIRL GENIUS'),'Jenny stage station missing');
+assert.ok(stageCode.includes('makeTeamPrizeFascia')&&stageCode.includes('updateTeamPrize'),'The table must have an updatable team-prize LED fascia');
+assert.ok(stageCode.includes('buildContestantAtTable')&&stageCode.includes('setActiveContestant'),'Active contestant model and label missing in Head-to-Head');
+assert.ok(html.includes("setActiveContestant(contestants[s.round]?.name"),'Current contestant must be sent to the stage');
+assert.ok(html.includes('class="hunt-tv-bug"'),'Red-black broadcast timer and cash builder display missing');
+assert.equal(vm.runInContext('chaseClock(125)',context),'02:05','TV timer must use MM:SS format');
+
 assert.ok(stageCode.includes('KARLI-RAE GOMEZ'),'Professor complete LED name missing');
 assert.ok(stageCode.includes('sims-karli'),'Professor Sims-style graphics missing');
 assert.ok(stageCode.includes('professorPortrait'),'Actual Sims screenshot portrait rendering missing');
