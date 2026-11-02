@@ -78,6 +78,10 @@ for(const view of ['stage','close','entrance','den'])assert.ok(output.includes('
 const stageCode=fs.readFileSync(require('node:path').join(__dirname,'app/stage3d.js'),'utf8');
 for(const item of ['buildHunt','buildWolfpack','buildDen','updateDen','HUNTER DEN — LIVE','ENTRANCE TUNNEL','studioLights','stageArch','curvedDesk','mainFloor','ringPlatform','floorChevron','verticalWallFrames'])assert.ok(stageCode.includes(item),'Missing 3D stage component: '+item);
 assert.ok(stageCode.includes('THE GIRL GENIUS'),'Jenny stage station missing');
+for(const marker of ['makeIntroLed','introCharacter','paintIntro','playIntroductions','stopIntroductions','updateIntroductions','SHADOW REVEAL','KARLI RAE','SCARLETT RAINES','ERIC HERRERA','JUSTIN SILVA','ABBY WARREN','JENNY KAY','THE RAVEN'])assert.ok(stageCode.includes(marker),'Missing Hunter LED intro element: '+marker);
+assert.ok(html.includes("window.wolfStage.playIntroductions([selectedHunter(s.round)])"),'Head-to-Head Hunter reveal is not wired to the intro');
+assert.ok(html.includes("window.wolfStage.playIntroductions([...friends,'The Raven'])"),'Beat the Wolfpack all-Hunter reveal missing');
+
 assert.ok(stageCode.includes('addWardenStageEffects')&&stageCode.includes('setWardenMode'),'Warden visual stage effects missing');
 assert.ok(stageCode.includes('GIRL GENIUS'),'Jenny Den station missing');
 console.log('PASS: expanded 3D studios and broadcast display, Hunter offers, chase board, survivor head start, pushback, BTW 1–7 Hunter battles and editors');
