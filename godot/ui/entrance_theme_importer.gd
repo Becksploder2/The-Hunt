@@ -6,6 +6,9 @@ const MODES := ["The Hunt", "Beat the Wolfpack"]
 const CHARACTERS := ["Arianna Dawson", "The Professor", "The Red Raider", "El Jefe", "The Jet", "The Girl Genius", "The Warden", "The Raven"]
 const EXTENSIONS := ["mp3", "ogg", "wav"]
 const STORE := "user://entrance_themes"
+const AUDIO_SETTINGS := "user://audio_settings.cfg"
+const DEFAULT_MIX_VOLUME := 0.38
+signal music_volume_changed(value: float)
 
 var mode_picker: OptionButton
 var slot_picker: OptionButton
@@ -53,6 +56,7 @@ func _ready() -> void:
     layout.add_child(slot_picker)
     player = AudioStreamPlayer.new()
     add_child(player)
+    player.volume_linear = _saved_volume()
     file_dialog = FileDialog.new()
     file_dialog.access = FileDialog.ACCESS_FILESYSTEM
     file_dialog.file_mode = FileDialog.FILE_MODE_OPEN_FILE
@@ -74,15 +78,32 @@ func _ready() -> void:
     volume_slider.min_value = 0.0
     volume_slider.max_value = 1.0
     volume_slider.step = 0.05
-    volume_slider.value = 1.0
+    volume_slider.value = _saved_volume()
+    var volume_label := Label.new()
+    volume_label.text = "Hunter entrance music volume (saved automatically)"
+    layout.add_child(volume_label)
     layout.add_child(volume_slider)
-    volume_slider.value_changed.connect(func(v: float) -> void: player.volume_linear = v)
+    volume_slider.value_changed.connect(_volume_changed)
     info = Label.new()
     layout.add_child(info)
     mode_picker.item_selected.connect(func(_i: int) -> void: _refresh())
     slot_picker.item_selected.connect(func(_i: int) -> void: _refresh())
     file_dialog.file_selected.connect(_import)
     _refresh()
+
+func _saved_volume() -> float:
+    var cfg := ConfigFile.new()
+    if cfg.load(AUDIO_SETTINGS) == OK:
+        return clampf(float(cfg.get_value("mix", "entrance_volume", DEFAULT_MIX_VOLUME)), 0.0, 1.0)
+    return DEFAULT_MIX_VOLUME
+
+func _volume_changed(value: float) -> void:
+    player.volume_linear = value
+    var cfg := ConfigFile.new()
+    cfg.load(AUDIO_SETTINGS)
+    cfg.set_value("mix", "entrance_volume", clampf(value, 0.0, 1.0))
+    cfg.save(AUDIO_SETTINGS)
+    music_volume_changed.emit(value)
 
 func _mode() -> String:
     return "btw" if mode_picker.selected == 1 else "hunt"
