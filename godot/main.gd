@@ -4,6 +4,7 @@ extends Node3D
 
 const IMPORTER_SCRIPT = preload("res://ui/entrance_theme_importer.gd")
 const DIRECTOR_SCRIPT = preload("res://audio/entrance_music_director.gd")
+const ANSWER_CUES_SCRIPT = preload("res://audio/answer_cues.gd")
 const HUNTERS = ["The Professor", "The Red Raider", "El Jefe", "The Jet", "The Warden", "The Girl Genius", "The Raven"]
 const LINES = {
  "The Professor":"Class is in session.",
@@ -149,6 +150,7 @@ var status_label: Label
 var timer_label: Label
 var cash_label: Label
 var headline: Label
+var answer_cues: Node
 var music_director: Node
 var music_importer: Control
 var countdown: Timer
@@ -162,6 +164,8 @@ func _ready() -> void:
  _load_contestants()
  _setup_world()
  _setup_ui()
+ answer_cues=ANSWER_CUES_SCRIPT.new()
+ add_child(answer_cues)
  music_director = DIRECTOR_SCRIPT.new()
  add_child(music_director)
  music_importer = IMPORTER_SCRIPT.new()
@@ -852,6 +856,8 @@ func _show_broadcast_question(question: Array, callback: Callable) -> void:
   question_buttons.append(button)
 
 func _reveal_answer(choice: int, correct: bool) -> void:
+ if answer_cues != null:
+  answer_cues.play_answer(correct)
  if choice<0 or choice>=question_buttons.size():
   return
  var selected:=question_buttons[choice]
@@ -1362,6 +1368,7 @@ func _final_question() -> void:
  _scoreboard()
  active_question=_question()
  _show_broadcast_question(active_question,func(selected: int) -> void:
+   _reveal_answer(selected,selected==int(active_question[2]))
    if phase=="final_team":
     if selected==int(active_question[2]):
      final_score+=1
@@ -1426,6 +1433,7 @@ func _btw_duel() -> void:
  _label("Your time: "+_clock_string(ceili(time_remaining))+" · Hunters: "+_clock_string(ceili(btw_clock)))
  active_question=_question()
  _show_broadcast_question(active_question,func(selected: int) -> void:
+   _reveal_answer(selected,selected==int(active_question[2]))
    if selected==int(active_question[2]):
     btw_clock=maxf(0.0,btw_clock-5.0)
     if btw_clock<=0:
