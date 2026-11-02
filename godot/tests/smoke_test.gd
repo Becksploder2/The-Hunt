@@ -93,7 +93,7 @@ func _verify() -> void:
   _fail("Detached cave bridge and waypoint walkout are missing")
   return
  var sloped: Node3D=game.get("tilt_table")
- if sloped==null or absf(sloped.rotation_degrees.x)<5.0:
+ if sloped==null or absf(sloped.rotation_degrees.x)<14.0 or sloped.position.z<0.5:
   _fail("Chase-style tilted quiz table missing")
   return
  if game.get("phase") != "entrance" or game.get("hunter_avatar") == null:
