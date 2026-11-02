@@ -26,6 +26,21 @@ func _verify() -> void:
  if game.get("studio") == null or game.get("camera") == null or game.get("panel") == null:
   _fail("Studio, camera or UI missing")
   return
+ var cues: Node=game.get("answer_cues")
+ if cues==null or cues.get_node_or_null("CorrectAnswerCue")==null or cues.get_node_or_null("WrongAnswerCue")==null:
+  _fail("Correct/wrong answer sound effects are missing")
+  return
+ cues.call("play_answer",true)
+ var correct_audio: AudioStreamPlayer=cues.get_node("CorrectAnswerCue")
+ if not correct_audio.playing or correct_audio.stream==null:
+  _fail("Correct-answer sting did not start")
+  return
+ cues.call("play_answer",false)
+ var wrong_audio: AudioStreamPlayer=cues.get_node("WrongAnswerCue")
+ if not wrong_audio.playing or wrong_audio.stream==null or correct_audio.playing:
+  _fail("Wrong-answer sting failed to start or interrupt the first cue")
+  return
+ wrong_audio.stop()
  if game.get("stage_clock") == null or game.get("table_prize") == null:
   _fail("3D clock or table prize LED missing")
   return
