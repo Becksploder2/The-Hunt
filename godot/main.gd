@@ -276,7 +276,7 @@ func _build_btw_stage() -> void:
  # A genuinely separate theatre stage: seven Hunter stations in an arc.
  for i in range(7):
   var x := (float(i)-3.0)*2.55
-  var z := -3.2+abs(float(i)-3.0)*0.34
+  var z: float = -3.2 + absf(float(i)-3.0)*0.34
   _box(studio,Vector3(2.3,1.2,1.5),Vector3(x,1.15,z),DARK)
   _box(studio,Vector3(2.45,0.13,1.6),Vector3(x,1.83,z),ORANGE,true)
   _text(studio,HUNTERS[i].to_upper(),Vector3(x,1.12,z+0.82),31,0.004,WHITE)
