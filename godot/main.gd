@@ -80,6 +80,10 @@ var btw_hunters := 2
 var btw_clock := 75.0
 var total_elapsed := 0.0
 var walking := false
+var entrance_light: OmniLight3D
+var entrance_banner: Label3D
+var warning_light: OmniLight3D
+var show_camera: Camera3D
 var walk_elapsed := 0.0
 var hunter_avatar: Node3D
 var hunter_target: Vector3
@@ -208,6 +212,72 @@ func _avatar(parent: Node3D, body_color: Color, face: Color, glasses := false, b
   _box(actor,Vector3(0.29,0.07,0.06),Vector3(0,1.99,0.25),Color("#edf5ff"),true)
  return actor
 
+
+func _cylinder(parent: Node3D, radius: float, height: float, pos: Vector3, color: Color, glowing := false) -> MeshInstance3D:
+ var instance := MeshInstance3D.new()
+ var mesh := CylinderMesh.new()
+ mesh.top_radius=radius
+ mesh.bottom_radius=radius
+ mesh.height=height
+ instance.mesh=mesh
+ instance.material_override=_mat(color,glowing)
+ instance.position=pos
+ parent.add_child(instance)
+ return instance
+
+func _ring(parent: Node3D, radius: float, pos: Vector3, color: Color) -> void:
+ var instance := MeshInstance3D.new()
+ var ring := TorusMesh.new()
+ ring.inner_radius=radius-0.08
+ ring.outer_radius=radius+0.08
+ instance.mesh=ring
+ instance.material_override=_mat(color,true)
+ instance.position=pos
+ parent.add_child(instance)
+
+func _featured_hunter(name: String) -> Node3D:
+ var jacket := Color("#202536")
+ var hair := Color("#392c34")
+ var glasses := false
+ var braces := false
+ match name:
+  "The Professor":
+   jacket=Color("#b6233e")
+   hair=Color("#edc878")
+   glasses=true
+   braces=true
+  "The Girl Genius":
+   jacket=Color("#663b86")
+   hair=Color("#f044ae")
+   glasses=true
+   braces=true
+  "The Red Raider":
+   jacket=Color("#b5222b")
+   hair=Color("#a13833")
+  "El Jefe":
+   jacket=Color("#304568")
+  "The Jet":
+   jacket=Color("#2854a1")
+  "The Warden":
+   jacket=Color("#48404e")
+   hair=Color("#95714e")
+ var model := _avatar(studio,jacket,SKIN,glasses,braces)
+ model.name=name.replace(" ","")
+ _box(model,Vector3(0.59,0.17,0.41),Vector3(0,2.51,0),hair)
+ if name in ["The Professor","The Girl Genius","The Warden","The Red Raider"]:
+  for x in [-0.23,0.23]:
+   _box(model,Vector3(0.18,0.48,0.36),Vector3(x,2.18,-0.06),hair)
+ if name=="The Professor":
+  for x in [-0.32,0.32]:
+   _box(model,Vector3(0.035,0.7,0.035),Vector3(x,1.86,0.24),Color("#edbf83"),true)
+ if name=="The Girl Genius":
+  _box(model,Vector3(0.12,0.57,0.11),Vector3(-0.23,2.18,0.20),Color("#f5dc9d"))
+ if name=="The Red Raider":
+  _text(model,"TT",Vector3(0,1.34,0.25),34,0.004,WHITE)
+ if name=="The Raven":
+  _text(model,"RAVEN",Vector3(0,1.34,0.25),30,0.003,ORANGE)
+ return model
+
 func _rebuild_studio() -> void:
  if studio != null:
   studio.queue_free()
@@ -220,8 +290,27 @@ func _rebuild_studio() -> void:
   var x := (float(i)-4.0)*2.6
   _box(studio,Vector3(0.08,7.0,0.14),Vector3(x,3.1,-7.9),RED,true)
  _box(studio,Vector3(21,0.19,0.4),Vector3(0,6.45,-7.85),ORANGE,true)
+ # Concentric overhead LED lighting rings across the studio.
+ for radius in [3.0,4.5,6.0]:
+  _ring(studio,radius,Vector3(0,6.10,-0.7),RED if radius==4.5 else ORANGE)
+ for i in range(8):
+  var theta := float(i)*TAU/8.0
+  _box(studio,Vector3(0.10,0.075,1.1),Vector3(sin(theta)*8.2,0.03,cos(theta)*6.4-0.5),RED,true)
  _text(studio,"THE HUNT" if mode == "hunt" else "BEAT THE WOLFPACK",Vector3(0,5.1,-7.65),125,0.007,WHITE)
  _arch(studio,7.7,-7.3)
+ entrance_banner=_text(studio,"HUNTER'S LAIR",Vector3(7.7,4.45,-6.52),42,0.005,WHITE)
+ entrance_light=OmniLight3D.new()
+ entrance_light.position=Vector3(7.7,3.0,-6.2)
+ entrance_light.light_color=RED
+ entrance_light.light_energy=4.5
+ entrance_light.omni_range=8
+ studio.add_child(entrance_light)
+ warning_light=OmniLight3D.new()
+ warning_light.position=Vector3(0,3.5,1.2)
+ warning_light.light_color=RED
+ warning_light.light_energy=0.0
+ warning_light.omni_range=7
+ studio.add_child(warning_light)
  # Stage light pillars and colored edges
  for x in [-10.0,-7.0,7.0,10.0]:
   _box(studio,Vector3(0.13,5.2,0.25),Vector3(x,2.6,-7.55),BLUE,true)
@@ -236,7 +325,7 @@ func _rebuild_studio() -> void:
   _build_hunt_table()
  else:
   _build_btw_stage()
- hunter_avatar = _avatar(studio,Color("#43141e"),SKIN,true,true)
+ hunter_avatar = _featured_hunter("The Professor")
  hunter_avatar.position=Vector3(7.7,0,-6.8)
  hunter_avatar.visible=false
  contestant_avatar = _avatar(studio,Color("#a41e31"),SKIN)
