@@ -3,12 +3,12 @@ const base=[
 ['Which planet is known as the Red Planet?','Mars',['Venus','Jupiter','Mercury']],['How many sides does a hexagon have?','6',['5','7','8']],['What is the capital of Canada?','Ottawa',['Toronto','Vancouver','Montreal']],['Which element has the symbol Au?','Gold',['Silver','Argon','Aluminum']],['What is 12 multiplied by 8?','96',['86','98','108']],['Which ocean is the largest?','Pacific',['Atlantic','Indian','Arctic']],['What is the square root of 144?','12',['10','11','14']],['Which artist painted the Mona Lisa?','Leonardo da Vinci',['Michelangelo','Raphael','Van Gogh']],['What is the largest mammal?','Blue whale',['Elephant','Giraffe','Hippopotamus']],['What year did humans first land on the Moon?','1969',['1959','1972','1981']],['Which country is home to the city of Kyoto?','Japan',['China','South Korea','Thailand']],['What is the chemical formula for water?','H2O',['CO2','NaCl','O2']],['How many players are on the court for one basketball team?','5',['4','6','7']],['Which instrument has black and white keys?','Piano',['Trumpet','Violin','Flute']],['What is the capital of Australia?','Canberra',['Sydney','Melbourne','Perth']],['What does CPU stand for?','Central Processing Unit',['Computer Power Utility','Central Program Upload','Core Processor User']],['Which gas do plants absorb for photosynthesis?','Carbon dioxide',['Oxygen','Nitrogen','Helium']],['How many degrees are in a right angle?','90',['45','180','360']],['Which sport uses a puck?','Ice hockey',['Basketball','Cricket','Tennis']],['Who wrote Romeo and Juliet?','William Shakespeare',['Charles Dickens','Jane Austen','Mark Twain']],['Which continent is Egypt in?','Africa',['Asia','Europe','South America']],['How many minutes are in three hours?','180',['120','150','240']],['Which number is prime?','13',['12','15','21']],['Which is the fastest land animal?','Cheetah',['Lion','Horse','Greyhound']],['What is the freezing point of water in Celsius?','0',['10','32','100']],['What is the largest planet in our solar system?','Jupiter',['Saturn','Earth','Neptune']],['How many strings does a standard guitar have?','6',['4','5','8']],['Which US state is nicknamed the Lone Star State?','Texas',['Arizona','Oklahoma','Nevada']],['What is 15 percent of 200?','30',['15','20','40']],['Which language is primarily spoken in Brazil?','Portuguese',['Spanish','French','Italian']]
 ].map(([q,a,w])=>({q,a,opts:[a,...w]}));
 const app=document.getElementById('app');let screen='home',session=null,tick=null,questions=load('wolf_questions',base),friends=['The Professor','The Red Raider','El Jefe','The Jet','The Warden'],unlocked=load('wolf_unlocked',false);let seed=0;const hunterProfiles=[
- {title:'The Professor',name:'Karli Rae',theme:'Texas Fight',show:'The Hunt',music:'Player import required'},
- {title:'The Red Raider',name:'Scarlett Raines',theme:'Fight Raiders Fight',show:'The Hunt',music:'Player import required'},
+ {title:'The Professor',name:'Karli Rae',theme:'Texas Fight',show:'The Hunt',music:'Player import required',personality:'The Professor: strict academic authority, theatrical wit and sharp banter; a blend of Anne Hegerty and Jenny Ryan.'},
+ {title:'The Red Raider',name:'Scarlett Raines',theme:'Fight Raiders Fight',show:'The Hunt',music:'Player import required',personality:'The Red Raider: fiery, determined and proudly Texas Tech.'},
  {title:'El Jefe',name:'Eric Herrera',theme:'Original entrance theme',show:'Both shows',music:'Prototype theme',personality:'The smartass: sarcastic, quick comebacks, playful condescension'},
  {title:'The Jet',name:'Justin Silva',theme:'Original entrance theme',show:'Both shows',music:'Prototype theme',country:'Canada',personality:'First Canadian Hunter. The group troll: mischievous, teasing, playful trash talk'},
- {title:'The Warden',name:'Abby Warren',theme:'Original rapid-fire entrance',show:'Both shows',music:'Original theme planned',speed:10,personality:'Fastest-answering Hunter; relentless and precise. Nickname honors her mother’s former job.'},
- {title:'The Raven',name:'Wolfpack Leader',theme:'Wings of the Raven',show:'Both shows',music:'Original theme planned'}
+ {title:'The Warden',name:'Abby Warren',theme:'Original rapid-fire entrance',show:'Both shows',music:'Original theme planned',speed:10,personality:'The Warden: quietly confident, friendly off the clock, exceptionally quick and relentless on the clock. Victoria Groce-style composure; nickname honors her mother’s former job.'},
+ {title:'The Raven',name:'Wolfpack Leader',theme:'Wings of the Raven',show:'Both shows',music:'Original theme planned',personality:'The Raven: composed quiz intellect, competitive retro-gaming wit and occasional self-deprecating humor.'}
 ];
 const ariDefault={name:'Arianna Dawson',hair:'Copper Red',style:'Long Waves',glasses:'Black Frames',braces:'Visible Silver',outfit:'Black Blazer / Orange Shirt'};let host=load('wolf_host',ariDefault);
 let contestants=load('wolf_contestants',Array.from({length:4},(_,i)=>({name:'Contestant '+(i+1),hair:'Brown',glasses:'None',outfit:'Black & Orange'})));
@@ -64,11 +64,11 @@ function advance(){
   s.log='Cash Builder complete: $'+s.roundMoney.toLocaleString()+'. '+selectedHunter(s.round)+' approaches the table. '+hunterLine(selectedHunter(s.round),'intro');
   playHunterTheme();
  }else if(s.phase==='offers'){
-  let base=Math.max(1000,s.roundMoney);
-  s.offers=[{label:'LOW OFFER',money:Math.max(1000,Math.round(base*.4/1000)*1000),step:1},
+  let base=Math.max(1000,s.roundMoney),style=hunterOfferStyle(selectedHunter(s.round));
+  s.offers=[{label:'LOW OFFER',money:Math.max(1000,Math.round(base*style.low/1000)*1000),step:1},
    {label:'MIDDLE OFFER',money:s.roundMoney,step:2},
-   {label:'HIGH OFFER',money:Math.max(5000,Math.round(base*3/1000)*1000),step:3}];
-  s.log=selectedHunter(s.round)+' offers three positions on the board. High offer: more money, one fewer step from being caught.';
+   {label:'HIGH OFFER',money:Math.max(5000,Math.round(base*style.high/1000)*1000),step:3}];
+  s.log=selectedHunter(s.round)+' offers three positions on the board. High offer: more money, one fewer step from being caught. '+hunterLine(selectedHunter(s.round),'offer');
  }else if(s.phase==='qual'){
   s.clock=0;s.score=0;s.opp=0;s.playerStep=s.offerStep||2;s.hunterStep=0;
   s.log=selectedHunter(s.round)+' vs '+contestants[s.round].name+'. Answer correctly to move your money down the board. The Hunter advances on correct answers.';
@@ -92,12 +92,76 @@ function advance(){
  draw();if(['builder','final','finalHunter','duel','hunter'].includes(s.phase))startTimer();
 }
 const hunterLines={
- 'El Jefe':{intro:'That is an interesting strategy. Wrong, obviously, but interesting.',correct:'I could explain it, but we only have so much time.',wrong:'Well, that was embarrassing. For me, unfortunately.'},
- 'The Jet':{intro:'Canada has arrived. Try not to take the bait!',correct:'Oh, that one was too easy. Sorry!',wrong:'I was just testing whether you were paying attention. Obviously.'},
- 'The Warden':{intro:'I answer fast. Keep up.',correct:'Next question.',wrong:'Move on. Faster.'}
+ 'The Professor':{
+  intro:'Welcome to your oral examination. I do hope you revised.',
+  offer:'Knowledge is valuable. Whether you possess any is another question.',
+  correct:'Precisely. I expected nothing less.',
+  wrong:'A rare slip. Do enjoy it while it lasts.',
+  victory:'Class dismissed.',
+  defeat:'A surprisingly good answer. Well done.'
+ },
+ 'The Red Raider':{
+  intro:'Wreck Em! You better be ready for a fight.',
+  offer:'Big stakes, big pressure. Lets see what youve got.',
+  correct:'Thats how we do it in Raider country!',
+  wrong:'Not my best play. Next question.',
+  victory:'Red Raider takes the win!',
+  defeat:'All right, that was a heck of a game.'
+ },
+ 'El Jefe':{
+  intro:'That is an interesting strategy. Wrong, obviously, but interesting.',
+  offer:'I can make it expensive for you to be wrong.',
+  correct:'I could explain it, but we only have so much time.',
+  wrong:'Well, that was embarrassing. For me, unfortunately.',
+  victory:'Another excellent decision by the management.',
+  defeat:'Fine. You got me. Try not to make a habit of it.'
+ },
+ 'The Jet':{
+  intro:'Canada has arrived. Try not to take the bait!',
+  offer:'The high offer looks great. What could possibly go wrong?',
+  correct:'Oh, that one was too easy. Sorry!',
+  wrong:'I was just testing whether you were paying attention. Obviously.',
+  victory:'Sorry about that. Its a Canadian thing.',
+  defeat:'Okay, you win this round. Ill be back with better jokes.'
+ },
+ 'The Warden':{
+  intro:'Welcome. I promise Ill make this quick.',
+  offer:'Your choice. Ill be ready either way.',
+  correct:'Next.',
+  wrong:'Good catch. Keep going.',
+  victory:'That was quick. Thank you for playing.',
+  defeat:'You earned your freedom. Well played.'
+ },
+ 'The Raven':{
+  intro:'Welcome to the Wolfpack. Lets see what youve got.',
+  offer:'Its a big number. Hope you can back it up.',
+  correct:'Got it. Next!',
+  wrong:'Oh, youve got to be kidding me. That one was mine!',
+  victory:'The Wolfpack takes another one!',
+  defeat:'Fair play. That was a great chase.'
+ }
 };
+const hunterTempo={'The Professor':2,'The Red Raider':2,'El Jefe':3,'The Jet':2,'The Warden':1,'The Raven':3};
 function hunterLine(name,event){return hunterLines[name]?.[event]||''}
-function hunterResponseDelay(s){return s.selectedHunters&&s.selectedHunters.includes('The Warden')?1:3}
+function hunterResponseDelay(s){
+ const lineup=s.selectedHunters||[];
+ return Math.max(1,Math.min(3,Math.round(lineup.reduce((total,name)=>total+(hunterTempo[name]||3),0)/(lineup.length||1))));
+}
+function hunterAccuracy(s){
+ const lineup=s.selectedHunters||[];
+ const ratings={'The Professor':.86,'The Red Raider':.79,'El Jefe':.84,'The Jet':.82,'The Warden':.89,'The Raven':.86};
+ return lineup.length?lineup.reduce((total,name)=>total+(ratings[name]||.8),0)/lineup.length:.8;
+}
+function hunterOfferStyle(name){
+ const profile={
+  'The Professor':{low:.3,high:3.1},
+  'The Red Raider':{low:.55,high:3.7},
+  'El Jefe':{low:.4,high:3.3},
+  'The Jet':{low:.45,high:3.2},
+  'The Warden':{low:.42,high:2.8}
+ };
+ return profile[name]||{low:.4,high:3};
+}
 function selectWolfpackHunters(n){
  const lineup=[...friends,'The Raven'];
  return lineup.slice(0,Math.max(1,Math.min(6,n)));
@@ -112,7 +176,7 @@ function startTimer(){
    else{s.oppclock--;s.aiDelay=(s.aiDelay||0)+1;
     if(s.aiDelay>=hunterResponseDelay(s)){
      s.aiDelay=0;
-     if(Math.random()<.8){s.opp++;s.turn='player';s.log='The Hunters answer correctly. Your clock is running!';nextTurn()}
+     if(Math.random()<hunterAccuracy(s)){s.opp++;s.turn='player';s.log=(s.selectedHunters.includes('The Warden')?'The Warden fires back instantly. ':'The Hunters answer correctly. ')+ 'Your clock is running!';nextTurn()}
      else{s.log='The Hunters miss. Their clock keeps running.';const msg=document.querySelector('.message');if(msg)msg.textContent=s.log}
     }
    }
@@ -121,7 +185,7 @@ function startTimer(){
    s.oppclock--;s.aiDelay=(s.aiDelay||0)+1;
    if(s.aiDelay>=4){
     s.aiDelay=0;
-    if(Math.random()<.76){s.opp++;s.log='The Raven answers correctly: '+s.opp+' / '+s.score;}
+    if(Math.random()<.76){s.opp++;s.log='The Raven: '+hunterLine('The Raven','correct')+' '+s.opp+' / '+s.score;}
     else{s.phase='pushback';s.log='The Raven gets one wrong — a pushback chance for the team.';stop();draw();return}
     if(s.opp>=s.score){finish(false);return}
     nextTurn();
