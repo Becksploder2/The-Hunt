@@ -127,9 +127,9 @@ func _ready() -> void:
 func _setup_world() -> void:
  camera = Camera3D.new()
  camera.position = Vector3(0, 8.8, 16.5)
+ add_child(camera)
  camera.look_at(Vector3(0, 1.2, -1.0))
  camera.current = true
- add_child(camera)
  var sun := DirectionalLight3D.new()
  sun.rotation_degrees = Vector3(-60,-30,0)
  sun.light_energy = 1.3
