@@ -62,6 +62,19 @@ verify('Hunter Offers','start("hunt");session.phase="offers";advance()');
 assert.ok(output.includes('HIGH OFFER'),'Three offer selection not available');
 verify('Head-to-Head','session.offer=3000;session.offerStep=2;session.phase="qual";advance()');
 assert.ok(output.includes('chase-track'),'Moving money and hunter board missing');
+
+// Optional Raven Double or Nothing: selected Hunter is named, both choices explicit.
+verify('DOUBLE OR NOTHING','session.mode="hunt";session.survivors=2;session.money=15000;session.roundResults=[{hunter:"The Warden",won:true}];session.phase="bonusOffer";advance()');
+assert.ok(output.includes('You got passed The Warden'),'The Raven challenge must identify defeated Hunter');
+assert.ok(output.includes("YOU CAN'T BEAT ME!"),'The Raven challenge wording missing');
+assert.ok(output.includes('Decline Offer')&&output.includes('Accept Double or Nothing'),'Both wager choices must be visible');
+assert.ok(!output.includes('data-answer='),'Bonus offer must not show an answer grid');
+vm.runInContext('session.doubleOrNothing=true;session.money=session.originalFinalPot*2;session.phase="final";advance()',context);
+assert.equal(vm.runInContext('session.money',context),30000,'Accept must double the prize');
+assert.equal(vm.runInContext('session.headStart',context),2,'Wager must preserve survivor head start');
+vm.runInContext('session.money=15000;session.phase="bonusOffer";advance();session.doubleOrNothing=false;session.money=session.originalFinalPot;session.phase="final";advance()',context);
+assert.equal(vm.runInContext('session.money',context),15000,'Decline must retain original prize');
+
 verify('FACE THE RAVEN','session.survivors=2;session.phase="final";advance()');
 assert.equal(vm.runInContext('session.score',context),2,'Final Chase missing survivor head start');
 verify('THE RAVEN IS CHASING','session.phase="finalHunter";advance()');
