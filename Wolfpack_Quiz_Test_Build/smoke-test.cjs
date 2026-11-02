@@ -102,7 +102,7 @@ assert.ok(stageCode.includes("screen.rotation.x=-Math.PI/2"),'Table LED reveal m
 assert.ok(stageCode.includes("buildChaseLedTable(true)"),'Beat the Wolfpack must retain a distinct LED table');
 assert.ok(stageCode.includes("buildChaseLedTable(false)"),'The Hunt must have the dedicated Chase-style table');
 
-for(const marker of ['makeIntroLed','introCharacter','paintIntro','playIntroductions','stopIntroductions','updateIntroductions','SHADOW REVEAL','KARLI RAE','SCARLETT RAINES','ERIC HERRERA','JUSTIN SILVA','ABBY WARREN','JENNY KAY','THE RAVEN'])assert.ok(stageCode.includes(marker),'Missing Hunter LED intro element: '+marker);
+for(const marker of ['makeIntroLed','introCharacter','paintIntro','playIntroductions','stopIntroductions','updateIntroductions','SHADOW REVEAL','KARLI-RAE GOMEZ','SCARLETT RAINES','ERIC HERRERA','JUSTIN SILVA','ABBY WARREN','JENNY KAY','THE RAVEN'])assert.ok(stageCode.includes(marker),'Missing Hunter LED intro element: '+marker);
 assert.ok(html.includes("window.wolfStage.playIntroductions([selectedHunter(s.round)])"),'Head-to-Head Hunter reveal is not wired to the intro');
 assert.ok(html.includes("window.wolfStage.playIntroductions([...friends,'The Raven'])"),'Beat the Wolfpack all-Hunter reveal missing');
 
