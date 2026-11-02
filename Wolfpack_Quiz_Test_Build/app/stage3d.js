@@ -216,7 +216,7 @@ function setWardenMode(enabled){
 }
 
 const INTRO_HUNTERS={
- 'The Professor':{name:'KARLI RAE',title:'THE PROFESSOR',hair:'#82482e',outfit:'#4e163c',accent:'#d4a54d',detail:'glasses',line:'CLASS IS IN SESSION'},
+ 'The Professor':{name:'KARLI-RAE GOMEZ',title:'THE PROFESSOR',hair:'#e4bc75',outfit:'#a92a3b',accent:'#e69c45',detail:'sims-karli',line:'CLASS IS IN SESSION'},
  'The Red Raider':{name:'SCARLETT RAINES',title:'THE RED RAIDER',hair:'#b73b2a',outfit:'#a52828',accent:'#ff3c26',detail:'guns',line:'WRECK EM'},
  'El Jefe':{name:'ERIC HERRERA',title:'EL JEFE',hair:'#24202a',outfit:'#262f43',accent:'#daa954',detail:'tie',line:'YOU ARE IN MY HOUSE'},
  'The Jet':{name:'JUSTIN SILVA',title:'THE JET',hair:'#332a28',outfit:'#25406e',accent:'#e1f4ff',detail:'maple',line:'TRY AND KEEP UP'},
@@ -253,6 +253,25 @@ function introCharacter(ctx,profile,shadow,t){
  ctx.beginPath();ctx.ellipse(0,-172,66,37,0,Math.PI,Math.PI*2);ctx.lineTo(66,-152);ctx.quadraticCurveTo(0,-192,-66,-151);ctx.closePath();ctx.fill();
  if(!shadow){
   ctx.fillStyle='#222';ctx.fillRect(-30,-113,16,5);ctx.fillRect(18,-113,16,5);
+  if(profile.detail==='sims-karli'){
+   // Stylized reference to Karli-Rae Gomez's Sims everyday look.
+   // Oversized red frames and a delicate glasses chain distinguish The Professor.
+   ctx.fillStyle='#d6af65';
+   ctx.beginPath();ctx.moveTo(-65,-159);ctx.quadraticCurveTo(-86,-89,-62,-47);
+   ctx.lineTo(-48,-57);ctx.lineTo(-48,-152);ctx.closePath();ctx.fill();
+   ctx.beginPath();ctx.moveTo(65,-159);ctx.quadraticCurveTo(86,-89,62,-47);
+   ctx.lineTo(48,-57);ctx.lineTo(48,-152);ctx.closePath();ctx.fill();
+   ctx.strokeStyle='#b6293e';ctx.lineWidth=9;
+   ctx.beginPath();ctx.roundRect(-61,-131,53,38,11);ctx.roundRect(8,-131,53,38,11);ctx.stroke();
+   ctx.beginPath();ctx.moveTo(-8,-113);ctx.lineTo(8,-113);ctx.stroke();
+   ctx.strokeStyle='#d8bf8e';ctx.lineWidth=3;
+   for(const side of [-1,1]){
+    ctx.beginPath();ctx.moveTo(side*60,-106);ctx.bezierCurveTo(side*91,-55,side*52,-34,side*58,25);ctx.stroke();
+    ctx.fillStyle='#f0dab1';ctx.beginPath();ctx.arc(side*58,25,4,0,Math.PI*2);ctx.fill();
+   }
+   ctx.fillStyle='#292932';ctx.fillRect(-83,25,22,115);ctx.fillRect(61,25,22,115);
+   ctx.fillStyle='#e2d6d2';ctx.fillRect(-19,-72,38,5);
+  }
   if(profile.detail.includes('glasses')){ctx.strokeStyle='#242332';ctx.lineWidth=7;ctx.strokeRect(-54,-123,43,27);ctx.strokeRect(11,-123,43,27);ctx.beginPath();ctx.moveTo(-11,-111);ctx.lineTo(11,-111);ctx.stroke();}
   if(profile.detail==='glasses-braces'){ctx.fillStyle='#e8eef0';ctx.fillRect(-19,-74,38,7);ctx.fillStyle='#b8babc';for(let x=-15;x<18;x+=10)ctx.fillRect(x,-74,3,7);
     ctx.fillStyle='#f0ce8f';ctx.fillRect(-45,-184,12,34);ctx.fillRect(26,-186,12,35);}
