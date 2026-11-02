@@ -34,8 +34,35 @@ func _verify() -> void:
  if game.get("phase") != "builder_intro":
   _fail("Cash Builder did not initialize")
   return
+ # Clock must keep running even after rebuilding an answer screen.
+ game.set("phase","builder")
+ var timer: Timer=game.get("countdown")
+ timer.start()
+ game.call("_question_screen")
+ await process_frame
+ if timer.is_stopped():
+  _fail("Cash Builder clock stopped while displaying first question")
+  return
+ var before: float=game.get("time_remaining")
+ game.call("_tick")
+ if float(game.get("time_remaining"))>=before:
+  _fail("Cash Builder clock did not count down")
+  return
+ game.call("_respond",int(game.get("active_question")[2]))
+ await process_frame
+ if timer.is_stopped():
+  _fail("Cash Builder clock stopped after an answer")
+  return
+ timer.stop()
  game.call("_begin_hunter_intro")
  await process_frame
+ if game.get("host_rear_screen")==null:
+  _fail("Host rear studio screen missing")
+  return
+ var led_banks: Array=game.get("uk_led_banks")
+ if led_banks.size()<30:
+  _fail("Side LED banks missing")
+  return
  var screen: Node3D=game.get("hunter_tron")
  if screen==null:
   _fail("Hunter screen missing")
