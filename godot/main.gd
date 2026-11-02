@@ -107,7 +107,8 @@ var rng := RandomNumberGenerator.new()
 func _ready() -> void:
  rng.randomize()
  for i in range(4):
-  contestant_styles.append({"name":"Contestant %d" % [i+1],"skin":"Medium","hair":"Brown","outfit":"Red","glasses":false,"braces":false})
+  contestant_styles.append({"name":"Contestant %d" % [i+1],"skin":"Medium","hair":"Brown","hairStyle":"Short","outfit":"Red","glasses":"No","braces":"No","gender":"Female","height_inches":66})
+ _load_contestants()
  _setup_world()
  _setup_ui()
  music_director = DIRECTOR_SCRIPT.new()
@@ -386,24 +387,81 @@ func _edit_contestants() -> void:
  phase="creator"
  _clear_ui()
  _heading("CREATE CONTESTANTS")
- _label("Chase-style names, clothing, skin, hair, glasses and braces")
- for i in range(4):
-  _label("CONTESTANT %d" % [i+1])
-  var input:=LineEdit.new()
-  input.text=contestant_names[i]
-  input.placeholder_text="Contestant name"
-  content.add_child(input)
-  input.text_changed.connect(func(value: String) -> void:
-   contestant_names[i]=value
-  )
- _button("SAVE TEAM",func() -> void:
-  var config:=ConfigFile.new()
-  for i in range(4):
-   config.set_value("contestants",str(i),contestant_names[i])
-  config.save("user://contestants.cfg")
-  _main_menu()
+ _label("Name, clothing, skin, hairstyle, hair color, glasses and braces")
+ var choices={
+  "outfit":["Purple","Red","Blue","Green","Gold","Black"],
+  "skin":["Light","Medium","Tan","Dark"],
+  "hairStyle":["Short","Long","Bald","Curly"],
+  "hair":["Brown","Black","Blonde","Red","Gray"],
+  "glasses":["No","Yes"],
+  "braces":["No","Yes"],
+  "gender":["Female","Male","Nonbinary"]
+ }
+ var fields=["outfit","skin","hairStyle","hair","glasses","braces","gender"]
+ var field_labels=["CLOTHING","SKIN TONE","HAIRSTYLE","HAIR COLOR","GLASSES","BRACES","GENDER"]
+ _label("CONTESTANT %d OF 4" % [contestant_index+1],true)
+ var name_field:=LineEdit.new()
+ name_field.text=contestant_names[contestant_index]
+ name_field.placeholder_text="Contestant name"
+ content.add_child(name_field)
+ name_field.text_changed.connect(func(value: String) -> void:
+  contestant_names[contestant_index]=value
+  contestant_styles[contestant_index]["name"]=value
  )
- _button("BACK",_main_menu)
+ for i in range(fields.size()):
+  var field:String=fields[i]
+  _label(field_labels[i])
+  var picker:=OptionButton.new()
+  var items:Array=choices[field]
+  for v in items:
+   picker.add_item(str(v))
+  var selected:int=items.find(str(contestant_styles[contestant_index].get(field,items[0])))
+  picker.select(maxi(0,selected))
+  content.add_child(picker)
+  picker.item_selected.connect(func(idx: int) -> void:
+   contestant_styles[contestant_index][field]=items[idx]
+  )
+ _label("HEIGHT: %d inches" % [int(contestant_styles[contestant_index].get("height_inches",66))])
+ var height:=HSlider.new()
+ height.min_value=54
+ height.max_value=90
+ height.step=1
+ height.value=float(contestant_styles[contestant_index].get("height_inches",66))
+ content.add_child(height)
+ height.value_changed.connect(func(v: float) -> void:
+  contestant_styles[contestant_index]["height_inches"]=int(v)
+ )
+ _button("PREVIOUS CONTESTANT",func() -> void:
+  contestant_index=maxi(0,contestant_index-1)
+  _edit_contestants()
+ )
+ _button("SAVE & NEXT / FINISH",func() -> void:
+  if contestant_index<3:
+   contestant_index+=1
+   _edit_contestants()
+  else:
+   _save_contestants()
+ )
+ _button("BACK TO MENU",_main_menu)
+
+func _save_contestants() -> void:
+ var config:=ConfigFile.new()
+ for i in range(4):
+  config.set_value("contestants",str(i),contestant_names[i])
+  config.set_value("looks",str(i),contestant_styles[i])
+ config.save("user://contestants.cfg")
+ contestant_index=0
+ _main_menu()
+
+func _load_contestants() -> void:
+ var config:=ConfigFile.new()
+ if config.load("user://contestants.cfg")!=OK:
+  return
+ for i in range(4):
+  contestant_names[i]=str(config.get_value("contestants",str(i),contestant_names[i]))
+  var saved=config.get_value("looks",str(i),{})
+  if saved is Dictionary:
+   contestant_styles[i].merge(saved,true)
 
 func _start_show(chosen_mode: String) -> void:
  mode=chosen_mode
@@ -564,6 +622,7 @@ func _show_offers() -> void:
   )
 
 func _head_to_head() -> void:
+ contestant_avatar.visible=true
  phase="head_to_head"
  _clear_ui()
  message=SLOGANS.offers
@@ -688,7 +747,7 @@ func _btw_selection() -> void:
  message=SLOGANS.btw
  _heading("BEAT THE WOLFPACK")
  _scoreboard()
- for n in range(2,8):
+ for n in range(1,8):
   var count:=n
   _button("FACE %d HUNTERS — $%s" % [n,_money(team_money*n)],func() -> void:
    btw_hunters=count
