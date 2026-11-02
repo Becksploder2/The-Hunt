@@ -74,7 +74,7 @@ function home(){shell(`<p class="eyebrow">Wolfpack Studios · First playable pro
 function start(mode){
  stop();stopImportedMusic();
  session={mode,phase:mode==='hunter'?'hunter':'builderIntro',round:0,qi:Math.floor(Math.random()*questions.length),
- money:0,roundMoney:0,builderCount:0,survivors:0,score:0,opp:0,clock:60,oppclock:60,
+ money:0,roundMoney:0,builderCount:0,perfectBuilderCount:0,perfectBuilders:[],survivors:0,score:0,opp:0,clock:60,oppclock:60,
  turn:'player',opponents:2,selectedHunters:[],offer:0,playerStep:0,hunterStep:0,
  finalStage:'team',pushbacks:0,headStart:0,allCaught:false,log:'',q:null,answered:false,
  lastCorrect:null,doubleOrNothing:false,originalFinalPot:0,roundResults:[],finalTeamSet:[],finalHunterSet:[]};
@@ -83,10 +83,10 @@ function start(mode){
 function advance(){
  stop();const s=session;if(!s)return;s.answered=false;s.lastCorrect=null;s.q=nextQ();
  if(s.phase==='builderIntro'){
-  s.builderCount=0;s.roundMoney=0;s.score=0;s.clock=showConfig.builderSeconds;
+  s.builderCount=0;s.roundMoney=0;s.score=0;s.clock=s.mode==='hunt'?120:showConfig.builderSeconds;
   s.log=s.mode==='btw'?'One contestant. Your first wrong answer ends the episode; later misses end the Cash Builder.':'Contestant '+(s.round+1)+' — earn money in the Cash Builder before meeting a Hunter.';
  }else if(s.phase==='builder'){
-  s.clock=showConfig.builderSeconds;s.builderCount=0;s.roundMoney=0;s.score=0;s.log='Cash Builder: $1,000 for every correct answer.';
+  s.clock=s.mode==='hunt'?120:showConfig.builderSeconds;s.builderCount=0;s.roundMoney=0;s.score=0;s.log=s.mode==='hunt'?'Ten questions or two minutes. $10,000 for every correct answer. Perfect 10/10 unlocks the Raven Super Offer and time bonus.':'Cash Builder: $1,000 for every correct answer.';
  }else if(s.phase==='qualIntro'){
   s.log='Cash Builder complete: $'+s.roundMoney.toLocaleString()+'. '+selectedHunter(s.round)+' approaches the table. '+hunterLine(selectedHunter(s.round),'intro');
   playHunterTheme();
@@ -245,13 +245,21 @@ function finishBuilder(){
  if(s.mode==='btw'){
   if(s.builderCount===0){end('Cash Builder expired without an answer. Episode over.');return}
   s.money=s.roundMoney;s.phase='choice';advance();
- }else{s.phase='qualIntro';advance()}
+  }else{
+  if(s.mode==='hunt'&&s.builderCount===10&&s.score===10){
+   const bonus=Math.floor(Math.max(0,s.clock)/10)*1000;
+   s.roundMoney+=bonus;s.perfectBuilderCount++;
+   s.perfectBuilders.push({name:contestants[s.round]?.name||'Contestant',bonus});
+   s.log='Perfect Cash Builder! $'+bonus.toLocaleString()+' time bonus earned and Raven Super Offer unlocked.';
+  }
+  s.phase='qualIntro';advance();
+ }
 }
 function gamePanel(s){
  if(s.phase==='bonusOffer'){
   const beaten=s.roundResults.filter(r=>r.won).map(r=>r.hunter);
   const hunterName=beaten.length?beaten.join(', '):'the Hunters';
-  return '<div class="card bonus-offer"><h2>DOUBLE OR NOTHING — THE RAVEN\'S CHALLENGE</h2><p>You got passed '+esc(hunterName)+'. But double your current prize pot says <strong>YOU CAN\'T BEAT ME!</strong> Do you accept my offer?</p><div class="offer-grid"><div class="card"><h3>DECLINE</h3><strong>$'+s.money.toLocaleString()+'</strong><p>Keep the original prize for Face the Raven.</p><button class="primary" data-double="no">Decline Offer</button></div><div class="card"><h3>ACCEPT</h3><strong>$'+(s.money*2).toLocaleString()+'</strong><p>Win to split the doubled prize. Lose and the team takes home $0.</p><button class="primary" data-double="yes">Accept Double or Nothing</button></div></div></div>';
+  return '<div class="card bonus-offer"><h2>'+(s.perfectBuilderCount?'SUPER OFFER UNLOCKED — ':'')+'DOUBLE OR NOTHING — THE RAVEN\'S CHALLENGE</h2><p>You got passed '+esc(hunterName)+'. But double your current prize pot says <strong>YOU CAN\'T BEAT ME!</strong> Do you accept my offer?</p><div class="offer-grid"><div class="card"><h3>DECLINE</h3><strong>$'+s.money.toLocaleString()+'</strong><p>Keep the original prize for Face the Raven.</p><button class="primary" data-double="no">Decline Offer</button></div><div class="card"><h3>ACCEPT</h3><strong>$'+(s.money*2).toLocaleString()+'</strong><p>Win to split the doubled prize. Lose and the team takes home $0.</p><button class="primary" data-double="yes">Accept Double or Nothing</button></div></div></div>';
  }
  if(s.phase==='offers'){
   return '<h2>Hunter Offers</h2><div class="offer-grid">'+s.offers.map((o,i)=>'<div class="card"><h3>'+o.label+'</h3><strong>$'+o.money.toLocaleString()+'</strong><p>Starting position: '+o.step+' steps from home</p><button data-offer="'+i+'">Accept Offer</button></div>').join('')+'</div>';
@@ -291,7 +299,7 @@ function draw(){
   window.wolfStage.render(s.mode==='btw'?'btw':'hunt');
   if(window.wolfStage.setProfessorPortrait)window.wolfStage.setProfessorPortrait(localStorage.getItem('wolf_professor_photo'));
   window.wolfStage.updateDen(s.q?.q,s.lastCorrect);
-  if(window.wolfStage.setActiveContestant)window.wolfStage.setActiveContestant(contestants[s.round]?.name||'Contestant',s.mode==='hunt'&&['qualIntro','offers','qual'].includes(s.phase));
+  if(window.wolfStage.setActiveContestant)window.wolfStage.setActiveContestant(contestants[s.round]?.name||'Contestant',s.mode==='hunt'&&['qualIntro','offers','qual'].includes(s.phase),contestants[s.round]);
   if(window.wolfStage.updateTeamPrize)window.wolfStage.updateTeamPrize(s.money,s.phase==='builder'?'TEAM PRIZE · CASH BUILDER':'TEAM PRIZE',s.roundMoney);
   if(window.wolfStage.setWardenMode)window.wolfStage.setWardenMode(s.phase==='qualIntro'&&selectedHunter(s.round)==='The Warden');
   if(window.wolfStage.playIntroductions){
@@ -305,7 +313,7 @@ function setHtml(s){return '<section class="three-scene"><div class="three-contr
 
 function introHtml(s){
  const first=s.phase==='builderIntro';
- return '<div class="card round-intro"><h2>'+(first?'CASH BUILDER':'HEAD-TO-HEAD')+'</h2><p>'+(first?'Answer as many questions as possible in '+showConfig.builderSeconds+' seconds. Every correct answer is worth $1,000.':'You earned $'+s.roundMoney.toLocaleString()+'. '+esc(selectedHunter(s.round))+' is ready with three offers.')+'</p><button class="primary" data-round-next="'+(first?'builder':'offers')+'">'+(first?'Start Cash Builder':'Meet the Hunter')+'</button></div>';
+ return '<div class="card round-intro"><h2>'+(first?'CASH BUILDER':'HEAD-TO-HEAD')+'</h2><p>'+(first?'Answer up to ten questions in two minutes. Each correct answer earns $10,000. A perfect 10/10 wins $1,000 for each full 10 seconds left and unlocks the Raven Super Offer.':'You earned $'+s.roundMoney.toLocaleString()+'. '+esc(selectedHunter(s.round))+' is ready with three offers.')+'</p><button class="primary" data-round-next="'+(first?'builder':'offers')+'">'+(first?'Start Cash Builder':'Meet the Hunter')+'</button></div>';
 }
 function choiceHtml(s){
  return '<h2>Choose your challenge</h2><p>Face between one and seven Wolfpack Hunters. Your Cash Builder stake is $'+s.money.toLocaleString()+'.</p><div class="offer-grid">'+[1,2,3,4,5,6,7].map(n=>'<div class="card"><h2>'+n+' Hunter'+(n===1?'':'s')+'</h2><p>Potential prize: $'+(Math.max(1000,s.money)*n).toLocaleString()+'</p><p>Hunter clock: '+(45+Math.max(0,7-n)*10)+' seconds</p><button data-choose="'+n+'">Face '+n+' Hunter'+(n===1?'':'s')+'</button></div>').join('')+'</div>';
@@ -328,13 +336,15 @@ function answer(index){
  if(document.querySelectorAll)document.querySelectorAll('[data-answer]').forEach(btn=>{const correct=s.q.opts[Number(btn.dataset.answer)]===s.q.a;btn.classList.add(correct?'answer-correct':'answer-wrong');btn.disabled=true});
  if(s.phase==='builder'){
   s.builderCount++;
-  if(good){s.roundMoney+=1000;s.score++;}else s.miss++;
-  s.log=good?'Correct! +$1,000':'Wrong: '+s.q.a;
+  if(good){s.roundMoney+=s.mode==='hunt'?10000:1000;s.score++;}else s.miss++;
+  s.log=good?'Correct! +$'+(s.mode==='hunt'?'10,000':'1,000'):'Wrong: '+s.q.a;
   if(s.mode==='btw'&&!good){
    if(s.builderCount===1){end('First Cash Builder answer missed — Beat the Wolfpack episode over.');return}
    s.phase='choice';s.money=s.roundMoney;advance();return;
   }
   if(s.mode==='btw'&&s.builderCount>=5){s.money=s.roundMoney;s.phase='choice';advance();return}
+  if(s.mode==='hunt'&&s.builderCount>=10){finishBuilder();return}
+  syncBroadcastBug(s);
   nextTurn();return;
  }
  if(s.phase==='qual'){
