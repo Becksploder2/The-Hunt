@@ -135,6 +135,7 @@ var dialogue_active := false
 var question_panel: PanelContainer
 var question_column: VBoxContainer
 var question_title: Label
+var broadcast_clock: Label
 var answer_grid: GridContainer
 var question_buttons: Array[Button] = []
 var question_mode := false
@@ -749,6 +750,12 @@ func _setup_broadcast_overlays() -> void:
  question_column=VBoxContainer.new()
  question_column.add_theme_constant_override("separation",8)
  question_panel.add_child(question_column)
+ broadcast_clock=Label.new()
+ broadcast_clock.name="LiveQuestionClockAndPrize"
+ broadcast_clock.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER
+ broadcast_clock.add_theme_font_size_override("font_size",19)
+ broadcast_clock.add_theme_color_override("font_color",Color("#ffd697"))
+ question_column.add_child(broadcast_clock)
  question_title=Label.new()
  question_title.name="BroadcastQuestion"
  question_title.autowrap_mode=TextServer.AUTOWRAP_WORD_SMART
@@ -822,6 +829,7 @@ func _show_broadcast_question(question: Array, callback: Callable) -> void:
  question_mode=true
  question_panel.visible=true
  question_title.text=str(question[0])
+ _update_broadcast_clock()
  for old in answer_grid.get_children():
   answer_grid.remove_child(old)
   old.queue_free()
@@ -918,7 +926,14 @@ func _update_head_to_head_board() -> void:
  if warning_light != null:
   warning_light.light_energy=5.5 if phase=="head_to_head" and hunter_steps>=player_steps-1 else 0.0
 
+func _update_broadcast_clock() -> void:
+ if broadcast_clock==null or not is_instance_valid(broadcast_clock):
+  return
+ var limit:int=5 if mode=="btw" else 10
+ broadcast_clock.text="TIME  %s     |     $%s     |     %d/%d ANSWERED" % [_clock_string(ceili(time_remaining)),_money(individual_money),answer_number,limit]
+
 func _update_3d_screens() -> void:
+ _update_broadcast_clock()
  if prize_label != null and is_instance_valid(prize_label):
   prize_label.text=("TEAM PRIZE   $" if mode=="hunt" else "PRIZE   $")+_money(team_money)
  if table_prize != null and is_instance_valid(table_prize):
