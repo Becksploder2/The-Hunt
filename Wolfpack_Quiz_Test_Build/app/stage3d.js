@@ -4,6 +4,7 @@ let wardenMode=false,wardenSign=null,wardenLight=null;
 let ledSurface=null,ledCtx=null,ledTexture=null,ledTimeline=null,ledPanel=null,introCam=null,cameraBeforeIntro=null;
 let professorPortrait=null,professorPortraitSrc='';
 let teamPrizeCanvas=null,teamPrizeCtx=null,teamPrizeTexture=null,teamPrizeScreen=null,teamPrizeLast='';
+let introHunterChange=null,introHunterIndex=-1;
 let activeContestantModel=null,activeContestantLabel=null,activeContestantName='';
 let scene,camera,renderer,container,current='stage',mode='',animation,denCam,stageCam,closeCam,entranceCam,denDisplay,denReaction='WATCHING',denQuestion='LIVE QUESTION',denHunters=[];
 const makeMat=(color,emissive=0)=>new THREE.MeshStandardMaterial({color,roughness:.42,metalness:.28,emissive,emissiveIntensity:.23});
@@ -380,20 +381,23 @@ function setProfessorPortrait(dataUrl){
  if(!dataUrl.startsWith('data:image/'))return;
  const pic=new Image();pic.onload=()=>{professorPortrait=pic};pic.onerror=()=>{professorPortrait=null};pic.src=dataUrl;
 }
+function setIntroHunterCallback(callback){introHunterChange=typeof callback==='function'?callback:null;}
 function playIntroductions(names){
  const roster=(Array.isArray(names)?names:[names]).filter(n=>INTRO_HUNTERS[n]);
  if(!roster.length||!ledPanel)return;
  ledTimeline={names:roster,start:performance.now(),secondsPer:4.1};
+ introHunterIndex=-1;
  ledPanel.visible=true;
  if(!cameraBeforeIntro)cameraBeforeIntro=camera;
  if(introCam)camera=introCam;
 }
-function stopIntroductions(){ledTimeline=null;if(ledPanel)ledPanel.visible=false;if(cameraBeforeIntro){camera=cameraBeforeIntro;cameraBeforeIntro=null;}}
+function stopIntroductions(){ledTimeline=null;introHunterIndex=-1;if(ledPanel)ledPanel.visible=false;if(cameraBeforeIntro){camera=cameraBeforeIntro;cameraBeforeIntro=null;}}
 function updateIntroductions(now){
  if(!ledTimeline||!ledPanel)return;
  const elapsed=(now-ledTimeline.start)/1000;
  const idx=Math.floor(elapsed/ledTimeline.secondsPer);
  if(idx>=ledTimeline.names.length){stopIntroductions();return;}
+ if(idx!==introHunterIndex){introHunterIndex=idx;if(introHunterChange)introHunterChange(ledTimeline.names[idx]);}
  paintIntro(ledTimeline.names[idx],elapsed-idx*ledTimeline.secondsPer);
 }
 
@@ -427,5 +431,5 @@ function render(modeValue='hunt',view='stage'){
  animate();
 }
 function setView(view){current=['den','close','entrance'].includes(view)?view:'stage';const selected=current==='den'?denCam:current==='close'?closeCam:current==='entrance'?entranceCam:stageCam;if(ledTimeline)cameraBeforeIntro=selected;else camera=selected;}
-function destroy(){if(animation)cancelAnimationFrame(animation);animation=null;if(renderer){renderer.dispose();if(renderer.domElement?.parentNode)renderer.domElement.parentNode.removeChild(renderer.domElement);}renderer=null;container=null;scene=null;camera=null;wardenSign=null;wardenLight=null;ledPanel=null;ledTimeline=null;ledCtx=null;if(ledTexture)ledTexture.dispose();ledTexture=null;ledSurface=null;introCam=null;cameraBeforeIntro=null;activeContestantModel=null;activeContestantLabel=null;activeContestantName='';teamPrizeLast='';teamPrizeCtx=null;teamPrizeCanvas=null;teamPrizeScreen=null;if(teamPrizeTexture)teamPrizeTexture.dispose();teamPrizeTexture=null;}
-window.wolfStage={render,setView,destroy,updateDen,setWardenMode,playIntroductions,stopIntroductions,setProfessorPortrait,updateTeamPrize,setActiveContestant};
+function destroy(){if(animation)cancelAnimationFrame(animation);animation=null;if(renderer){renderer.dispose();if(renderer.domElement?.parentNode)renderer.domElement.parentNode.removeChild(renderer.domElement);}renderer=null;container=null;scene=null;camera=null;wardenSign=null;wardenLight=null;ledPanel=null;ledTimeline=null;ledCtx=null;if(ledTexture)ledTexture.dispose();ledTexture=null;ledSurface=null;introCam=null;cameraBeforeIntro=null;introHunterIndex=-1;activeContestantModel=null;activeContestantLabel=null;activeContestantName='';teamPrizeLast='';teamPrizeCtx=null;teamPrizeCanvas=null;teamPrizeScreen=null;if(teamPrizeTexture)teamPrizeTexture.dispose();teamPrizeTexture=null;}
+window.wolfStage={render,setView,destroy,updateDen,setWardenMode,playIntroductions,stopIntroductions,setProfessorPortrait,updateTeamPrize,setActiveContestant,setIntroHunterCallback};
