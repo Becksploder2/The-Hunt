@@ -84,6 +84,8 @@ var entrance_light: OmniLight3D
 var entrance_banner: Label3D
 var warning_light: OmniLight3D
 var show_camera: Camera3D
+var board_marks: Array[Label3D] = []
+var host_avatar: Node3D
 var walk_elapsed := 0.0
 var hunter_avatar: Node3D
 var hunter_target: Vector3
@@ -279,6 +281,7 @@ func _featured_hunter(name: String) -> Node3D:
  return model
 
 func _rebuild_studio() -> void:
+ board_marks.clear()
  if studio != null:
   studio.queue_free()
  studio = Node3D.new()
@@ -325,6 +328,11 @@ func _rebuild_studio() -> void:
   _build_hunt_table()
  else:
   _build_btw_stage()
+ # Arianna Dawson holds the host side of the stage.
+ host_avatar=_avatar(studio,Color("#25212b"),SKIN,false,false)
+ host_avatar.position=Vector3(-8.4,0,-2.0)
+ _box(host_avatar,Vector3(0.58,0.23,0.44),Vector3(0,2.50,0),Color("#b76542"))
+ _text(studio,"ARIANNA DAWSON",Vector3(-8.4,3.0,-1.9),42,0.004,WHITE)
  hunter_avatar = _featured_hunter("The Professor")
  hunter_avatar.position=Vector3(7.7,0,-6.8)
  hunter_avatar.visible=false
@@ -347,7 +355,10 @@ func _build_hunt_table() -> void:
  for edge in [-4.42,4.42]:
   _box(studio,Vector3(0.10,0.17,4.78),Vector3(edge,1.7,-0.2),ORANGE,true)
  for i in range(7):
-  _box(studio,Vector3(6.3,0.035,0.47),Vector3(0,1.70,-1.75+float(i)*0.55),RED if i%2==0 else BLUE,true)
+  var row_z := -1.75+float(i)*0.55
+  _box(studio,Vector3(6.3,0.035,0.47),Vector3(0,1.70,row_z),RED if i%2==0 else BLUE,true)
+  var marker:=_text(studio,str(i+1),Vector3(-3.0,1.84,row_z),30,0.004,WHITE)
+  board_marks.append(marker)
  # Front-of-table team prize LED
  _box(studio,Vector3(7.95,0.95,0.11),Vector3(0,1.05,2.08),DARK)
  _box(studio,Vector3(8,0.06,0.13),Vector3(0,1.53,2.10),RED,true)
@@ -474,6 +485,16 @@ func _money(amount: int) -> String:
 
 func _clock_string(seconds: int) -> String:
  return "%02d:%02d" % [maxi(0,seconds)/60,maxi(0,seconds)%60]
+
+func _update_head_to_head_board() -> void:
+ for i in range(board_marks.size()):
+  var row:=board_marks[i]
+  if is_instance_valid(row):
+   var cell:=i+1
+   row.text=("◆ HUNTER  " if hunter_steps==cell else "")+("● CONTESTANT" if player_steps==cell else str(cell))
+   row.modulate=RED if hunter_steps==cell else Color("#f8d188") if player_steps==cell else WHITE
+ if warning_light != null:
+  warning_light.light_energy=5.5 if phase=="head_to_head" and hunter_steps>=player_steps-1 else 0.0
 
 func _update_3d_screens() -> void:
  if prize_label != null and is_instance_valid(prize_label):
@@ -791,6 +812,7 @@ func _head_to_head() -> void:
  _h2h_question()
 
 func _h2h_question() -> void:
+ _update_head_to_head_board()
  for child in content.get_children():
   content.remove_child(child)
   child.queue_free()
@@ -818,6 +840,8 @@ func _h2h_question() -> void:
   )
 
 func _end_head_to_head(won: bool) -> void:
+ if warning_light != null:
+  warning_light.light_energy=0.0
  if won:
   surviving+=1
   team_money+=offered_money
