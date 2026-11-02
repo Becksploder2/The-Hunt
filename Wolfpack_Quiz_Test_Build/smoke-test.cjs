@@ -32,6 +32,9 @@ assert.equal(vm.runInContext('hunterResponseDelay({selectedHunters:["The Warden"
 assert.equal(vm.runInContext('hunterResponseDelay({selectedHunters:["El Jefe"]})',context),3,'Other Hunters should differ in speed');
 assert.ok(vm.runInContext('hunterAccuracy({selectedHunters:["The Warden"]})',context)>vm.runInContext('hunterAccuracy({selectedHunters:["The Jet"]})',context),'Abby accuracy should exceed Justin');
 assert.ok(output.includes('Fight Raiders Fight'),'Scarlett music assignment missing');
+assert.ok(output.includes('Lockdown (original theme cue)'),'Warden music cue missing');
+assert.equal(vm.runInContext('hunterLine("The Warden","intro")',context),'All rise. The Warden is now in session.','Warden judge entrance missing');
+assert.ok(vm.runInContext('hunterLine("The Warden","victory")',context).includes('Case closed'),'Warden verdict line missing');
 assert.ok(output.includes('pink hair')||output.includes('Pink hair'),'Jenny appearance specification missing');
 assert.ok(vm.runInContext('hunterLine("The Girl Genius","intro")',context).includes('Player two'),'Jenny retro gaming dialogue missing');
 assert.ok(vm.runInContext('hunterLine("The Red Raider","offer")',context).includes('TCU'),'Scarlett rivalry dialogue missing');
@@ -75,5 +78,6 @@ for(const view of ['stage','close','entrance','den'])assert.ok(output.includes('
 const stageCode=fs.readFileSync(require('node:path').join(__dirname,'app/stage3d.js'),'utf8');
 for(const item of ['buildHunt','buildWolfpack','buildDen','updateDen','HUNTER DEN — LIVE','ENTRANCE TUNNEL','studioLights','stageArch','curvedDesk','mainFloor','ringPlatform','floorChevron','verticalWallFrames'])assert.ok(stageCode.includes(item),'Missing 3D stage component: '+item);
 assert.ok(stageCode.includes('THE GIRL GENIUS'),'Jenny stage station missing');
+assert.ok(stageCode.includes('addWardenStageEffects')&&stageCode.includes('setWardenMode'),'Warden visual stage effects missing');
 assert.ok(stageCode.includes('GIRL GENIUS'),'Jenny Den station missing');
 console.log('PASS: expanded 3D studios and broadcast display, Hunter offers, chase board, survivor head start, pushback, BTW 1–7 Hunter battles and editors');
