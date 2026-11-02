@@ -4,6 +4,7 @@ let wardenMode=false,wardenSign=null,wardenLight=null;
 let ledSurface=null,ledCtx=null,ledTexture=null,ledTimeline=null,ledPanel=null,introCam=null,cameraBeforeIntro=null;
 let professorPortrait=null,professorPortraitSrc='';
 let teamPrizeCanvas=null,teamPrizeCtx=null,teamPrizeTexture=null,teamPrizeScreen=null,teamPrizeLast='';
+let activeContestantModel=null,activeContestantLabel=null,activeContestantName='';
 let scene,camera,renderer,container,current='stage',mode='',animation,denCam,stageCam,closeCam,entranceCam,denDisplay,denReaction='WATCHING',denQuestion='LIVE QUESTION',denHunters=[];
 const makeMat=(color,emissive=0)=>new THREE.MeshStandardMaterial({color,roughness:.42,metalness:.28,emissive,emissiveIntensity:.23});
 const mDark=makeMat(0x111111),mMetal=makeMat(0x414141),mOrange=makeMat(orange,0x552200),mWhite=makeMat(0xffffff);
@@ -128,6 +129,38 @@ function updateTeamPrize(amount=0,label='TEAM PRIZE',round=0){
  if(round>0){c.fillStyle='#ffffff';c.font='bold 26px Arial';c.fillText('ROUND $'+round.toLocaleString('en-US'),512,238,940);}
  teamPrizeTexture.needsUpdate=true;
 }
+function buildContestantAtTable(){
+ // Active contestant stands at the near end of the table facing the Hunter.
+ activeContestantModel=new THREE.Group();activeContestantModel.position.set(0,0,4.68);
+ scene.add(activeContestantModel);
+ const clothes=makeMat(0x981528),skin=makeMat(0xd8a58a);
+ const body=new THREE.Mesh(new THREE.CylinderGeometry(.37,.46,.95,16),clothes);body.position.y=1.28;activeContestantModel.add(body);
+ const head=new THREE.Mesh(new THREE.SphereGeometry(.29,16,12),skin);head.position.y=2.02;activeContestantModel.add(head);
+ for(const x of [-.22,.22]){
+  block(.16,.86,.19,x,.43,0,mDark,activeContestantModel);
+  block(.16,.68,.19,x*1.8,1.22,0,skin,activeContestantModel);
+ }
+ // Default figure faces the far end of the board, toward the Hunter.
+ activeContestantModel.rotation.y=Math.PI;
+ activeContestantLabel=textSurface('CONTESTANT',0,.64,4.99,2.7,.4);
+ activeContestantModel.visible=false;activeContestantLabel.visible=false;
+}
+function setActiveContestant(name,visible){
+ if(!activeContestantModel)return;
+ const show=Boolean(visible);
+ activeContestantModel.visible=show;
+ if(activeContestantLabel)activeContestantLabel.visible=show;
+ const safeName=String(name||'CONTESTANT').trim().slice(0,28);
+ if(show&&safeName!==activeContestantName&&activeContestantLabel){
+  // Repaint the name texture without rebuilding the entire set.
+  const canvas=activeContestantLabel.material.map.image,ctx=canvas.getContext('2d');
+  ctx.fillStyle='#080808';ctx.fillRect(0,0,canvas.width,canvas.height);
+  ctx.strokeStyle='#d9293d';ctx.lineWidth=12;ctx.strokeRect(5,5,canvas.width-10,canvas.height-10);
+  ctx.fillStyle='#ffffff';ctx.font='bold 48px Arial';ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.fillText(safeName.toUpperCase(),canvas.width/2,canvas.height/2,canvas.width-28);
+  activeContestantLabel.material.map.needsUpdate=true;activeContestantName=safeName;
+ }
+}
 function buildHunt(){
  panelWall();mainFloor();truss();studioLights();stageArch();verticalWallFrames();doorway(-7.0,-7.28,'HUNTER TUNNEL');
  for(let k=0;k<4;k++)floorChevron(-5.5+k*3.6,3.65,-1);
@@ -136,6 +169,7 @@ function buildHunt(){
  // Original Wolfpack studio with the Chase-style longitudinal seven-step LED table.
  // The LED playing surface runs toward the host, not across the rear of the stage.
  buildChaseLedTable(false);
+ buildContestantAtTable();
  for(let x of [-6.3,6.3]){
   cylinder(1.0,1.26,.38,x,.42,1.38,mMetal);
   cylinder(.85,.95,.28,x,.77,1.38,mOrange);
@@ -377,5 +411,5 @@ function render(modeValue='hunt',view='stage'){
  animate();
 }
 function setView(view){current=['den','close','entrance'].includes(view)?view:'stage';const selected=current==='den'?denCam:current==='close'?closeCam:current==='entrance'?entranceCam:stageCam;if(ledTimeline)cameraBeforeIntro=selected;else camera=selected;}
-function destroy(){if(animation)cancelAnimationFrame(animation);animation=null;if(renderer){renderer.dispose();if(renderer.domElement?.parentNode)renderer.domElement.parentNode.removeChild(renderer.domElement);}renderer=null;container=null;scene=null;camera=null;wardenSign=null;wardenLight=null;ledPanel=null;ledTimeline=null;ledCtx=null;if(ledTexture)ledTexture.dispose();ledTexture=null;ledSurface=null;introCam=null;cameraBeforeIntro=null;teamPrizeLast='';teamPrizeCtx=null;teamPrizeCanvas=null;teamPrizeScreen=null;if(teamPrizeTexture)teamPrizeTexture.dispose();teamPrizeTexture=null;}
-window.wolfStage={render,setView,destroy,updateDen,setWardenMode,playIntroductions,stopIntroductions,setProfessorPortrait,updateTeamPrize};
+function destroy(){if(animation)cancelAnimationFrame(animation);animation=null;if(renderer){renderer.dispose();if(renderer.domElement?.parentNode)renderer.domElement.parentNode.removeChild(renderer.domElement);}renderer=null;container=null;scene=null;camera=null;wardenSign=null;wardenLight=null;ledPanel=null;ledTimeline=null;ledCtx=null;if(ledTexture)ledTexture.dispose();ledTexture=null;ledSurface=null;introCam=null;cameraBeforeIntro=null;activeContestantModel=null;activeContestantLabel=null;activeContestantName='';teamPrizeLast='';teamPrizeCtx=null;teamPrizeCanvas=null;teamPrizeScreen=null;if(teamPrizeTexture)teamPrizeTexture.dispose();teamPrizeTexture=null;}
+window.wolfStage={render,setView,destroy,updateDen,setWardenMode,playIntroductions,stopIntroductions,setProfessorPortrait,updateTeamPrize,setActiveContestant};
