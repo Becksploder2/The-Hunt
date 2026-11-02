@@ -1,13 +1,12 @@
 extends Control
-## Drop-in Godot 4 entrance music importer for The Hunt / Beat the Wolfpack.
-## Add this scene/script to a Control in the game UI. Imported tracks are user://
-## overrides, separate from the default soundtrack in res://.
+## Godot 4 music importer. Attach to a Control scene.
 signal entrance_theme_changed(mode: String, character: String, path: String)
 
 const MODES := ["The Hunt", "Beat the Wolfpack"]
-const HOST := "Arianna Dawson"
-const EXTENSIONS := ["wav", "ogg", "mp3"]
+const CHARACTERS := ["Arianna Dawson", "The Professor", "The Red Raider", "El Jefe", "The Jet", "The Girl Genius", "The Warden", "The Raven"]
+const EXTENSIONS := ["mp3", "ogg", "wav"]
 const STORE := "user://entrance_themes"
+
 var mode_picker: OptionButton
 var slot_picker: OptionButton
 var file_dialog: FileDialog
@@ -15,144 +14,134 @@ var player: AudioStreamPlayer
 var info: Label
 var volume_slider: HSlider
 
+static func slot_key(character: String) -> String:
+    return character.to_lower().replace(" ", "_").replace("-", "_")
+
+static func get_override_stream(mode: String, character: String) -> AudioStream:
+    var key := "btw" if mode.to_lower() in ["btw", "beat the wolfpack"] else "hunt"
+    for ext in EXTENSIONS:
+        var path := "%s/%s_%s.%s" % [STORE, key, slot_key(character), ext]
+        if FileAccess.file_exists(path):
+            return load_audio(path)
+    return null
+
+static func load_audio(path: String) -> AudioStream:
+    var bytes := FileAccess.get_file_as_bytes(path)
+    if bytes.is_empty():
+        return null
+    match path.get_extension().to_lower():
+        "mp3": return AudioStreamMP3.load_from_buffer(bytes)
+        "ogg": return AudioStreamOggVorbis.load_from_buffer(bytes)
+        "wav": return AudioStreamWAV.load_from_buffer(bytes)
+    return null
+
 func _ready() -> void:
     DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(STORE))
     var layout := VBoxContainer.new()
     layout.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
     add_child(layout)
-    var heading := Label.new()
-    heading.text = "The Hunt — Entrance Theme Importer"
-    layout.add_child(heading)
+    var title := Label.new()
+    title.text = "Entrance Music — The Hunt / Beat the Wolfpack"
+    layout.add_child(title)
     mode_picker = OptionButton.new()
     for mode in MODES:
         mode_picker.add_item(mode)
     layout.add_child(mode_picker)
     slot_picker = OptionButton.new()
-    slot_picker.add_item(HOST + " — Host Entrance")
+    for character in CHARACTERS:
+        slot_picker.add_item(character)
     layout.add_child(slot_picker)
-    mode_picker.item_selected.connect(func(_index: int) -> void: _refresh())
-    slot_picker.item_selected.connect(func(_index: int) -> void: _refresh())
-    var import_button := Button.new()
-    import_button.text = "Import Entrance Theme"
-    layout.add_child(import_button)
-    import_button.pressed.connect(func() -> void: file_dialog.popup_centered_ratio(0.75))
-    var preview_button := Button.new()
-    preview_button.text = "Preview / Stop"
-    layout.add_child(preview_button)
-    preview_button.pressed.connect(_toggle_preview)
-    var reset_button := Button.new()
-    reset_button.text = "Reset to Default"
-    layout.add_child(reset_button)
-    reset_button.pressed.connect(_reset)
-    volume_slider = HSlider.new()
-    volume_slider.min_value = 0
-    volume_slider.max_value = 1
-    volume_slider.step = 0.05
-    volume_slider.value = 1
-    layout.add_child(volume_slider)
-    volume_slider.value_changed.connect(func(value: float) -> void: player.volume_linear = value)
-    info = Label.new()
-    layout.add_child(info)
     player = AudioStreamPlayer.new()
     add_child(player)
     file_dialog = FileDialog.new()
     file_dialog.access = FileDialog.ACCESS_FILESYSTEM
     file_dialog.file_mode = FileDialog.FILE_MODE_OPEN_FILE
-    file_dialog.add_filter("*.wav, *.ogg, *.mp3", "Audio files")
+    file_dialog.add_filter("*.mp3, *.ogg, *.wav", "Music")
     add_child(file_dialog)
-    file_dialog.file_selected.connect(_import_file)
+    var import_button := Button.new()
+    import_button.text = "Import / Replace"
+    layout.add_child(import_button)
+    import_button.pressed.connect(func() -> void: file_dialog.popup_centered_ratio(0.75))
+    var preview := Button.new()
+    preview.text = "Preview / Stop"
+    layout.add_child(preview)
+    preview.pressed.connect(_preview)
+    var reset := Button.new()
+    reset.text = "Reset to Game Default"
+    layout.add_child(reset)
+    reset.pressed.connect(_reset)
+    volume_slider = HSlider.new()
+    volume_slider.min_value = 0.0
+    volume_slider.max_value = 1.0
+    volume_slider.step = 0.05
+    volume_slider.value = 1.0
+    layout.add_child(volume_slider)
+    volume_slider.value_changed.connect(func(v: float) -> void: player.volume_linear = v)
+    info = Label.new()
+    layout.add_child(info)
+    mode_picker.item_selected.connect(func(_i: int) -> void: _refresh())
+    slot_picker.item_selected.connect(func(_i: int) -> void: _refresh())
+    file_dialog.file_selected.connect(_import)
     _refresh()
 
-func _mode_key() -> String:
-    return "hunt" if mode_picker.selected == 0 else "btw"
+func _mode() -> String:
+    return "btw" if mode_picker.selected == 1 else "hunt"
 
-func _destination(extension: String) -> String:
-    return "%s/%s_arianna.%s" % [STORE, _mode_key(), extension]
+func _character() -> String:
+    return CHARACTERS[slot_picker.selected]
 
-func _selected_path() -> String:
-    for extension in EXTENSIONS:
-        var path := _destination(extension)
-        if FileAccess.file_exists(path):
-            return path
+func _path(ext: String) -> String:
+    return "%s/%s_%s.%s" % [STORE, _mode(), slot_key(_character()), ext]
+
+func _current_path() -> String:
+    for ext in EXTENSIONS:
+        if FileAccess.file_exists(_path(ext)):
+            return _path(ext)
     return ""
 
 func _refresh() -> void:
-    if info == null:
-        return
-    var path := _selected_path()
-    info.text = "Custom theme ready: " + path if path != "" else "Default theme (no custom override)"
-    if player != null:
-        player.stop()
+    player.stop()
+    var path := _current_path()
+    info.text = "Imported: " + path if path != "" else "Using game default (no custom track)"
 
-func _import_file(path: String) -> void:
-    var extension := path.get_extension().to_lower()
-    if not EXTENSIONS.has(extension):
-        info.text = "Unsupported audio type."
+func _import(source: String) -> void:
+    var ext := source.get_extension().to_lower()
+    if not EXTENSIONS.has(ext) or load_audio(source) == null:
+        info.text = "Unsupported or unreadable music file."
         return
-    var bytes := FileAccess.get_file_as_bytes(path)
-    if bytes.is_empty():
-        info.text = "Could not read audio file."
+    var bytes := FileAccess.get_file_as_bytes(source)
+    var dest := _path(ext)
+    var output := FileAccess.open(dest, FileAccess.WRITE)
+    if output == null:
+        info.text = "Could not save custom theme."
         return
-    var stream := _load_stream(path, bytes)
-    if stream == null:
-        info.text = "Could not decode audio. Try OGG, MP3, or PCM WAV."
-        return
-    var target := _destination(extension)
-    var file := FileAccess.open(target, FileAccess.WRITE)
-    if file == null:
-        info.text = "Cannot save imported theme."
-        return
-    file.store_buffer(bytes)
-    file.close()
+    output.store_buffer(bytes)
+    output.close()
     for other in EXTENSIONS:
-        if other != extension:
-            var old := _destination(other)
-            if FileAccess.file_exists(old):
-                DirAccess.remove_absolute(ProjectSettings.globalize_path(old))
-    entrance_theme_changed.emit(_mode_key(), HOST, target)
+        if other != ext and FileAccess.file_exists(_path(other)):
+            DirAccess.remove_absolute(ProjectSettings.globalize_path(_path(other)))
+    entrance_theme_changed.emit(_mode(), _character(), dest)
     _refresh()
 
-func _load_stream(path: String, bytes: PackedByteArray) -> AudioStream:
-    match path.get_extension().to_lower():
-        "mp3":
-            return AudioStreamMP3.load_from_buffer(bytes)
-        "ogg":
-            return AudioStreamOggVorbis.load_from_buffer(bytes)
-        "wav":
-            return AudioStreamWAV.load_from_buffer(bytes)
-    return null
-
-func _toggle_preview() -> void:
+func _preview() -> void:
     if player.playing:
         player.stop()
         return
-    var path := _selected_path()
+    var path := _current_path()
     if path == "":
-        info.text = "No custom theme imported; the game's default theme plays in-game."
+        info.text = "Import a track first to preview it."
         return
-    var stream := _load_stream(path, FileAccess.get_file_as_bytes(path))
-    if stream == null:
-        info.text = "Unable to preview this audio file."
+    player.stream = load_audio(path)
+    if player.stream == null:
+        info.text = "Failed to decode imported track."
         return
-    player.stream = stream
     player.volume_linear = volume_slider.value
     player.play()
 
 func _reset() -> void:
     player.stop()
-    for extension in EXTENSIONS:
-        var path := _destination(extension)
-        if FileAccess.file_exists(path):
-            DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
-    entrance_theme_changed.emit(_mode_key(), HOST, "")
+    for ext in EXTENSIONS:
+        if FileAccess.file_exists(_path(ext)):
+            DirAccess.remove_absolute(ProjectSettings.globalize_path(_path(ext)))
+    entrance_theme_changed.emit(_mode(), _character(), "")
     _refresh()
-
-## The game entrance director can call this method to get the override stream.
-## Returns null when the original res:// soundtrack should be used.
-func get_arianna_entrance_stream(mode: String) -> AudioStream:
-    var key := "btw" if mode == "btw" else "hunt"
-    for extension in EXTENSIONS:
-        var path := "%s/%s_arianna.%s" % [STORE, key, extension]
-        if FileAccess.file_exists(path):
-            return _load_stream(path, FileAccess.get_file_as_bytes(path))
-    return null
