@@ -339,6 +339,11 @@ func _build_hunt_table() -> void:
  _box(studio,Vector3(8.1,0.75,4.25),Vector3(0,1.05,-0.2),BLUE)
  _box(studio,Vector3(8.9,0.2,4.75),Vector3(0,1.52,-0.2),Color("#889ca7"))
  _box(studio,Vector3(8.9,0.055,4.78),Vector3(0,1.66,-0.2),Color("#1c2531"))
+ # Layered television-style desk fascia with an illuminated sweep.
+ _box(studio,Vector3(9.0,0.16,0.25),Vector3(0,1.65,2.12),RED,true)
+ _box(studio,Vector3(9.15,0.11,0.25),Vector3(0,0.53,2.14),ORANGE,true)
+ for x in [-3.4,-2.4,2.4,3.4]:
+  _box(studio,Vector3(0.07,0.7,0.15),Vector3(x,0.95,2.19),RED,true)
  for edge in [-4.42,4.42]:
   _box(studio,Vector3(0.10,0.17,4.78),Vector3(edge,1.7,-0.2),ORANGE,true)
  for i in range(7):
@@ -382,7 +387,23 @@ func _setup_ui() -> void:
  panel=PanelContainer.new()
  panel.set_anchors_preset(Control.PRESET_TOP_LEFT)
  panel.position=Vector2(22,22)
- panel.custom_minimum_size=Vector2(520,0)
+ panel.custom_minimum_size=Vector2(540,0)
+ var panel_style:=StyleBoxFlat.new()
+ panel_style.bg_color=Color("#101019ee")
+ panel_style.border_color=Color("#ca293c")
+ panel_style.border_width_left=3
+ panel_style.border_width_top=3
+ panel_style.border_width_right=3
+ panel_style.border_width_bottom=3
+ panel_style.corner_radius_top_left=11
+ panel_style.corner_radius_top_right=11
+ panel_style.corner_radius_bottom_left=11
+ panel_style.corner_radius_bottom_right=11
+ panel_style.content_margin_left=20
+ panel_style.content_margin_right=20
+ panel_style.content_margin_top=17
+ panel_style.content_margin_bottom=17
+ panel.add_theme_stylebox_override("panel",panel_style)
  ui.add_child(panel)
  content=VBoxContainer.new()
  content.add_theme_constant_override("separation",9)
@@ -407,18 +428,40 @@ func _label(words: String, large := false) -> Label:
 func _button(caption: String, action: Callable) -> Button:
  var button:=Button.new()
  button.text=caption
- button.custom_minimum_size=Vector2(460,44)
+ button.custom_minimum_size=Vector2(470,52)
+ button.add_theme_font_size_override("font_size",18)
+ button.add_theme_color_override("font_color",Color("#ffffff"))
+ var normal:=StyleBoxFlat.new()
+ normal.bg_color=Color("#24121c")
+ normal.border_color=RED
+ normal.set_border_width_all(2)
+ normal.set_corner_radius_all(6)
+ normal.set_content_margin_all(10)
+ var hover:=normal.duplicate() as StyleBoxFlat
+ hover.bg_color=Color("#942438")
+ var pressed:=normal.duplicate() as StyleBoxFlat
+ pressed.bg_color=Color("#e23b51")
+ button.add_theme_stylebox_override("normal",normal)
+ button.add_theme_stylebox_override("hover",hover)
+ button.add_theme_stylebox_override("pressed",pressed)
  content.add_child(button)
  button.pressed.connect(action)
  return button
 
 func _heading(title: String) -> void:
- _label(title,true)
- _label(message)
+ var title_label:=_label(title,true)
+ title_label.add_theme_color_override("font_color",Color("#ff566b"))
+ title_label.add_theme_font_size_override("font_size",30)
+ var intro:=_label(message)
+ intro.add_theme_color_override("font_color",Color("#edc2cb"))
 
 func _scoreboard() -> void:
- cash_label=_label("Prize: $%s  |  Team: $%s" % [_money(individual_money),_money(team_money)])
- timer_label=_label("TIME  %s  |  Correct %d/10" % [_clock_string(int(time_remaining)),right_answers])
+ cash_label=_label("CONTESTANT  $%s      |      TEAM PRIZE  $%s" % [_money(individual_money),_money(team_money)])
+ cash_label.add_theme_color_override("font_color",Color("#ffe7b0"))
+ cash_label.add_theme_font_size_override("font_size",22)
+ timer_label=_label("TIME  %s     •     QUESTIONS  %d/10" % [_clock_string(ceili(time_remaining)),answer_number])
+ timer_label.add_theme_font_size_override("font_size",22)
+ timer_label.add_theme_color_override("font_color",Color("#ffffff"))
  _update_3d_screens()
 
 func _money(amount: int) -> String:
@@ -596,7 +639,8 @@ func _question_screen() -> void:
  _heading("CASH BUILDER" if phase=="builder" else "THE HUNT")
  _scoreboard()
  active_question=_question()
- _label(active_question[0],true)
+ var q_label:=_label(active_question[0],true)
+ q_label.add_theme_color_override("font_color",Color("#fff0dc"))
  for i in range(4):
   var choice:=i
   _button(active_question[1][i],func() -> void: _respond(choice))
@@ -619,7 +663,7 @@ func _tick() -> void:
  if phase=="builder":
   time_remaining=maxf(0.0,time_remaining-1.0)
   if timer_label != null and is_instance_valid(timer_label):
-   timer_label.text="TIME  %s  |  Correct %d/10" % [_clock_string(ceili(time_remaining)),right_answers]
+   timer_label.text="TIME  %s     •     QUESTIONS  %d/10" % [_clock_string(ceili(time_remaining)),answer_number]
   _update_3d_screens()
   if time_remaining<=0:
    _end_builder()
