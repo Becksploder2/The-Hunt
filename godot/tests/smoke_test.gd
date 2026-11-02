@@ -34,10 +34,27 @@ func _verify() -> void:
  if game.get("phase") != "builder_intro":
   _fail("Cash Builder did not initialize")
   return
+ game.call("_begin_hunter_intro")
+ await process_frame
+ if game.get("phase") != "entrance" or game.get("hunter_avatar") == null:
+  _fail("Hunter entrance did not initialize")
+  return
+ game.call("_hunter_sits_and_speaks")
+ await process_frame
+ game.call("_show_offers")
+ game.call("_head_to_head")
+ await process_frame
+ if game.get("phase") != "head_to_head" or game.get("contestant_avatar") == null:
+  _fail("Hunter desk and active contestant failed to initialize")
+  return
+ var board: Array=game.get("board_marks")
+ if board.size() != 7:
+  _fail("Seven-step LED table tracker is missing")
+  return
  game.call("_start_show", "btw")
  await process_frame
  if game.get("phase") != "builder_intro":
   _fail("Beat the Wolfpack did not initialize")
   return
- print("GODOT SMOKE TEST PASS: script, HUD, 3D stage, Hunt and BTW")
+ print("GODOT SMOKE TEST PASS: script, broadcast HUD, 3D studio, Hunter entrance, chase table and BTW")
  quit(0)
