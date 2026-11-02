@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 const orange=0xff7900, black=0x090909;
 let wardenMode=false,wardenSign=null,wardenLight=null;
+let ledSurface=null,ledCtx=null,ledTexture=null,ledTimeline=null,ledPanel=null;
 let scene,camera,renderer,container,current='stage',mode='',animation,denCam,stageCam,closeCam,entranceCam,denDisplay,denReaction='WATCHING',denQuestion='LIVE QUESTION',denHunters=[];
 const makeMat=(color,emissive=0)=>new THREE.MeshStandardMaterial({color,roughness:.42,metalness:.28,emissive,emissiveIntensity:.23});
 const mDark=makeMat(0x111111),mMetal=makeMat(0x414141),mOrange=makeMat(orange,0x552200),mWhite=makeMat(0xffffff);
@@ -182,6 +183,79 @@ function setWardenMode(enabled){
  if(wardenSign)wardenSign.visible=wardenMode;
  if(wardenLight)wardenLight.visible=wardenMode;
 }
+
+const INTRO_HUNTERS={
+ 'The Professor':{name:'KARLI RAE',title:'THE PROFESSOR',hair:'#82482e',outfit:'#4e163c',accent:'#d4a54d',detail:'glasses',line:'CLASS IS IN SESSION'},
+ 'The Red Raider':{name:'SCARLETT RAINES',title:'THE RED RAIDER',hair:'#b73b2a',outfit:'#a52828',accent:'#ff3c26',detail:'guns',line:'WRECK EM'},
+ 'El Jefe':{name:'ERIC HERRERA',title:'EL JEFE',hair:'#24202a',outfit:'#262f43',accent:'#daa954',detail:'tie',line:'YOU ARE IN MY HOUSE'},
+ 'The Jet':{name:'JUSTIN SILVA',title:'THE JET',hair:'#332a28',outfit:'#25406e',accent:'#e1f4ff',detail:'maple',line:'TRY AND KEEP UP'},
+ 'The Warden':{name:'ABBY WARREN',title:'THE WARDEN',hair:'#795345',outfit:'#202833',accent:'#e9bb6f',detail:'gavel',line:'ALL RISE'},
+ 'The Girl Genius':{name:'JENNY KAY',title:'THE GIRL GENIUS',hair:'#f241ac',outfit:'#54337e',accent:'#f3c5e1',detail:'glasses-braces',line:'PLAYER TWO HAS ENTERED'},
+ 'The Raven':{name:'THE WOLFPACK LEADER',title:'THE RAVEN',hair:'#191b23',outfit:'#101522',accent:'#ff7900',detail:'raven',line:'WELCOME TO THE WOLFPACK'}
+};
+function makeIntroLed(){
+ ledSurface=document.createElement('canvas');ledSurface.width=1024;ledSurface.height=480;
+ ledCtx=ledSurface.getContext('2d');ledTexture=new THREE.CanvasTexture(ledSurface);
+ ledTexture.colorSpace=THREE.SRGBColorSpace;
+ const screen=new THREE.Mesh(new THREE.PlaneGeometry(9.3,3.2),new THREE.MeshBasicMaterial({map:ledTexture,side:THREE.DoubleSide,transparent:false}));
+ // Raise an illuminated screen from the show desk only during introductions.
+ screen.position.set(0,2.83,mode==='btw'?2.55:-.42);
+ scene.add(screen);ledPanel=screen;screen.visible=false;
+ block(9.6,.10,.17,0,1.19,mode==='btw'?2.57:-.40,mIce);
+}
+function introCharacter(ctx,profile,shadow,t){
+ ctx.save();ctx.translate(524+Math.sin(t*1.8)*5,270);
+ const bob=shadow?0:Math.sin(t*2)*5;
+ ctx.translate(0,bob);
+ ctx.fillStyle=shadow?'#020509':profile.outfit;
+ ctx.beginPath();ctx.moveTo(-120,140);ctx.lineTo(-100,-56);ctx.quadraticCurveTo(-76,-94,-48,-95);ctx.lineTo(56,-95);ctx.quadraticCurveTo(92,-82,104,-50);ctx.lineTo(126,140);ctx.closePath();ctx.fill();
+ ctx.fillStyle=shadow?'#020509':'#d6a685';
+ ctx.beginPath();ctx.ellipse(0,-122,65,81,0,0,Math.PI*2);ctx.fill();
+ ctx.fillStyle=shadow?'#020509':profile.hair;
+ ctx.beginPath();ctx.ellipse(0,-172,66,37,0,Math.PI,Math.PI*2);ctx.lineTo(66,-152);ctx.quadraticCurveTo(0,-192,-66,-151);ctx.closePath();ctx.fill();
+ if(!shadow){
+  ctx.fillStyle='#222';ctx.fillRect(-30,-113,16,5);ctx.fillRect(18,-113,16,5);
+  if(profile.detail.includes('glasses')){ctx.strokeStyle='#242332';ctx.lineWidth=7;ctx.strokeRect(-54,-123,43,27);ctx.strokeRect(11,-123,43,27);ctx.beginPath();ctx.moveTo(-11,-111);ctx.lineTo(11,-111);ctx.stroke();}
+  if(profile.detail==='glasses-braces'){ctx.fillStyle='#e8eef0';ctx.fillRect(-19,-74,38,7);ctx.fillStyle='#b8babc';for(let x=-15;x<18;x+=10)ctx.fillRect(x,-74,3,7);
+    ctx.fillStyle='#f0ce8f';ctx.fillRect(-45,-184,12,34);ctx.fillRect(26,-186,12,35);}
+  if(profile.detail==='gavel'){ctx.fillStyle='#e8b954';ctx.fillRect(92,-54,16,92);ctx.fillRect(75,-68,52,24);}
+  if(profile.detail==='raven'){ctx.fillStyle='#fa791d';ctx.beginPath();ctx.moveTo(-78,29);ctx.lineTo(-28,72);ctx.lineTo(-60,75);ctx.closePath();ctx.fill();}
+  if(profile.detail==='maple'){ctx.fillStyle='#ffffff';ctx.font='42px Arial';ctx.fillText('✦',-9,56);}
+  if(profile.detail==='tie'){ctx.fillStyle=profile.accent;ctx.fillRect(-8,-79,16,70);}
+  if(profile.detail==='guns'){ctx.fillStyle=profile.accent;ctx.font='36px Arial';ctx.fillText('★',-20,60);}
+ }
+ ctx.restore();
+}
+function paintIntro(name,elapsed){
+ if(!ledCtx||!ledTexture)return;
+ const ctx=ledCtx,p=INTRO_HUNTERS[name]||INTRO_HUNTERS['The Raven'];
+ const shadow=elapsed<1.45,enter= Math.min(1,Math.max(0,(elapsed-1.45)/.55));
+ ctx.fillStyle='#050b15';ctx.fillRect(0,0,1024,480);
+ const glow=ctx.createLinearGradient(0,0,1024,0);glow.addColorStop(0,'#082a43');glow.addColorStop(.5,shadow?'#231610':p.accent);glow.addColorStop(1,'#06182d');
+ ctx.globalAlpha=shadow?.36:.2+enter*.12;ctx.fillStyle=glow;ctx.fillRect(0,0,1024,480);ctx.globalAlpha=1;
+ for(let y=0;y<480;y+=12){ctx.fillStyle='rgba(114,185,225,.07)';ctx.fillRect(0,y,1024,2);}
+ ctx.strokeStyle=p.accent;ctx.lineWidth=12;ctx.strokeRect(7,7,1010,466);
+ ctx.save();ctx.beginPath();ctx.rect(270,34,500,395);ctx.clip();introCharacter(ctx,p,shadow,elapsed);ctx.restore();
+ ctx.fillStyle='#ffffff';ctx.textAlign='center';ctx.font='bold 48px Arial';ctx.fillText(shadow?'WHO IS THE HUNTER?':p.title,512,65,940);
+ ctx.font='bold 35px Arial';ctx.fillStyle=shadow?'#ffb767':'#e9f4ff';ctx.fillText(shadow?'SHADOW REVEAL':p.name,512,431,940);
+ if(!shadow){ctx.font='bold 20px Arial';ctx.fillStyle='#ffd99a';ctx.fillText(p.line,512,462,940);}
+ ledTexture.needsUpdate=true;
+}
+function playIntroductions(names){
+ const roster=(Array.isArray(names)?names:[names]).filter(n=>INTRO_HUNTERS[n]);
+ if(!roster.length||!ledPanel)return;
+ ledTimeline={names:roster,start:performance.now(),secondsPer:4.1};
+ ledPanel.visible=true;
+}
+function stopIntroductions(){ledTimeline=null;if(ledPanel)ledPanel.visible=false;}
+function updateIntroductions(now){
+ if(!ledTimeline||!ledPanel)return;
+ const elapsed=(now-ledTimeline.start)/1000;
+ const idx=Math.floor(elapsed/ledTimeline.secondsPer);
+ if(idx>=ledTimeline.names.length){stopIntroductions();return;}
+ paintIntro(ledTimeline.names[idx],elapsed-idx*ledTimeline.secondsPer);
+}
+
 function render(modeValue='hunt',view='stage'){
  const el=document.getElementById('stage3d');
  if(!el){destroy();return}
@@ -197,6 +271,7 @@ function render(modeValue='hunt',view='stage'){
  const spot=new THREE.DirectionalLight(0xffffff,2);spot.position.set(3,9,8);scene.add(spot);
  if(mode==='btw')buildWolfpack();else buildHunt();
  addWardenStageEffects();
+ makeIntroLed();
  const den=new THREE.Group();den.userData.isDen=true;den.position.x=30;scene.add(den);buildDen(den);
  const denLight=new THREE.PointLight(orange,85,25);denLight.position.set(30,4,2);scene.add(denLight);
  stageCam=new THREE.PerspectiveCamera(58,(el.clientWidth||850)/(el.clientHeight||420),.1,100);
@@ -206,9 +281,9 @@ function render(modeValue='hunt',view='stage'){
  closeCam=new THREE.PerspectiveCamera(55,stageCam.aspect,.1,100);closeCam.position.set(4,3.6,5);closeCam.lookAt(0,1.5,-2);
  entranceCam=new THREE.PerspectiveCamera(55,stageCam.aspect,.1,100);entranceCam.position.set(-6.8,2.3,4);entranceCam.lookAt(-7.2,2,-7);
  setView(view);
- const animate=()=>{if(!renderer||!scene)return;animation=requestAnimationFrame(animate);renderer.render(scene,camera)};
+ const animate=()=>{if(!renderer||!scene)return;animation=requestAnimationFrame(animate);updateIntroductions(performance.now());renderer.render(scene,camera)};
  animate();
 }
 function setView(view){current=['den','close','entrance'].includes(view)?view:'stage';camera=current==='den'?denCam:current==='close'?closeCam:current==='entrance'?entranceCam:stageCam;}
-function destroy(){if(animation)cancelAnimationFrame(animation);animation=null;if(renderer){renderer.dispose();if(renderer.domElement?.parentNode)renderer.domElement.parentNode.removeChild(renderer.domElement);}renderer=null;container=null;scene=null;camera=null;wardenSign=null;wardenLight=null;}
-window.wolfStage={render,setView,destroy,updateDen,setWardenMode};
+function destroy(){if(animation)cancelAnimationFrame(animation);animation=null;if(renderer){renderer.dispose();if(renderer.domElement?.parentNode)renderer.domElement.parentNode.removeChild(renderer.domElement);}renderer=null;container=null;scene=null;camera=null;wardenSign=null;wardenLight=null;ledPanel=null;ledTimeline=null;ledCtx=null;if(ledTexture)ledTexture.dispose();ledTexture=null;ledSurface=null;}
+window.wolfStage={render,setView,destroy,updateDen,setWardenMode,playIntroductions,stopIntroductions};
