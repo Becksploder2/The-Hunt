@@ -176,8 +176,8 @@ function startTimer(){
    else{s.oppclock--;s.aiDelay=(s.aiDelay||0)+1;
     if(s.aiDelay>=hunterResponseDelay(s)){
      s.aiDelay=0;
-     if(Math.random()<hunterAccuracy(s)){s.opp++;s.turn='player';s.log=(s.selectedHunters.includes('The Warden')?'The Warden fires back instantly. ':'The Hunters answer correctly. ')+ 'Your clock is running!';nextTurn()}
-     else{s.log='The Hunters miss. Their clock keeps running.';const msg=document.querySelector('.message');if(msg)msg.textContent=s.log}
+     if(Math.random()<hunterAccuracy(s)){s.opp++;s.turn='player';const speaker=s.selectedHunters[(s.opp-1)%s.selectedHunters.length]||'The Raven';s.log=speaker+': '+hunterLine(speaker,'correct')+' Your clock is running!';nextTurn()}
+     else{const speaker=s.selectedHunters[s.opp%s.selectedHunters.length]||'The Raven';s.log=speaker+': '+hunterLine(speaker,'wrong')+' Their clock keeps running.';const msg=document.querySelector('.message');if(msg)msg.textContent=s.log}
     }
    }
   }else if(s.phase==='final')s.clock--;
@@ -239,7 +239,7 @@ function choiceHtml(s){
 }
 function endQualifier(won){
  const s=session;if(won){s.survivors++;s.money+=s.offer;}
- s.roundResults.push({name:contestants[s.round]?.name||'Contestant',won,offer:s.offer});
+ s.roundResults.push({name:contestants[s.round]?.name||'Contestant',won,offer:s.offer,comment:hunterLine(selectedHunter(s.round),won?'defeat':'victory')});
  s.round++;s.roundMoney=0;
  if(s.round>=4){
   if(s.survivors===0){s.allCaught=true;s.money=4000}
