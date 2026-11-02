@@ -462,20 +462,20 @@ func _build_uk_side_led_banks() -> void:
  # Keep the center and the bridge completely unobstructed.
  for side in [-1.0,1.0]:
   for column in range(3):
-   var x:float=side*(10.65+float(column)*0.52)
-   var base:=_box(studio,Vector3(0.20,5.7,0.23),Vector3(x,2.85,-2.8),Color("#1d1926"))
+   var x:float=side*(15.0+float(column)*0.47)
+   var base:=_box(studio,Vector3(0.20,5.7,0.23),Vector3(x,2.85,-1.0),Color("#1d1926"))
    base.name="UKSideLEDColumn"
    for j in range(12):
     var y:float=0.52+float(j)*0.43
-    var segment:=_box(studio,Vector3(0.14,0.28,0.30),Vector3(x,y,-2.55),RED if (j+column)%2==0 else ORANGE,true)
+    var segment:=_box(studio,Vector3(0.14,0.28,0.30),Vector3(x,y,-0.72),RED if (j+column)%2==0 else ORANGE,true)
     uk_led_banks.append(segment)
 
 func _build_host_rear_screen() -> void:
  # Dedicated broadcast panel behind Arianna rather than behind the chase desk.
  host_rear_screen=Node3D.new()
  host_rear_screen.name="AriannaBackdropScreen"
- host_rear_screen.position=Vector3(-8.15,0,-5.8)
- host_rear_screen.rotation_degrees.y=12.0
+ host_rear_screen.position=Vector3(-10.15,0,-7.65)
+ host_rear_screen.rotation_degrees.y=18.0
  studio.add_child(host_rear_screen)
  _box(host_rear_screen,Vector3(5.55,3.3,0.32),Vector3(0,3.1,-0.12),Color("#13131c"))
  _box(host_rear_screen,Vector3(5.18,2.9,0.12),Vector3(0,3.12,0.15),Color("#541b2a"),true)
@@ -490,8 +490,8 @@ func _build_hunter_titantron() -> void:
  # Stage-left of the elevated cave, angled toward the main camera.
  hunter_tron=Node3D.new()
  hunter_tron.name="HunterTitantronRoot"
- hunter_tron.position=Vector3(11.2,0,-9.45)
- hunter_tron.rotation_degrees.y=-23.0
+ hunter_tron.position=Vector3(14.1,0,-6.3)
+ hunter_tron.rotation_degrees.y=-20.0
  studio.add_child(hunter_tron)
  # Flat framed LED display, not an assortment of hovering title bars.
  _box(hunter_tron,Vector3(4.9,5.95,0.50),Vector3(0,3.1,-0.15),DARK)
@@ -510,7 +510,7 @@ func _build_hunter_titantron() -> void:
  _text(hunter_tron,"THE HUNT  •  HUNTER INTRODUCTION",Vector3(0,5.5,0.45),39,0.004,WHITE)
  for i in range(4):
   var side:=OmniLight3D.new()
-  side.position=Vector3(11.2 + (-2.6 if i%2==0 else 2.6),1.9+float(i/2)*2.65,-8.8)
+  side.position=Vector3(14.1 + (-2.6 if i%2==0 else 2.6),1.9+float(i/2)*2.65,-5.7)
   side.light_color=RED
   side.light_energy=1.4
   side.omni_range=6.0
@@ -596,13 +596,12 @@ func _build_lair_bridge() -> void:
  _box(studio,Vector3(5.8,1.25,4.25),Vector3(8.55,0.44,-11.3),Color("#28212b"))
  _box(studio,Vector3(5.9,0.13,4.35),Vector3(8.55,1.13,-11.3),ORANGE,true)
  _arch(studio,8.55,-12.6)
- _text(studio,"THE HUNTER'S LAIR",Vector3(8.55,5.65,-11.8),51,0.005,WHITE)
+ # Cave identity is shown on the dedicated Hunter screen.
  for i in range(entrance_waypoints.size()-2):
   _bridge_segment(entrance_waypoints[i],entrance_waypoints[i+1],i)
  # Final approach is a floor-level pathway ending directly at the Hunter seat.
  _bridge_segment(entrance_waypoints[entrance_waypoints.size()-2],entrance_waypoints.back(),4)
- for x in [6.2,8.55,10.9]:
-  _box(studio,Vector3(0.13,1.6,0.17),Vector3(x,2.1,-11.4),RED,true)
+ # Bridge edge lighting supplies the entrance path; omit extra cave poles.
 
 func _build_hunt_table() -> void:
  # Chase-style show geometry adapted for The Hunt: long, narrow, seven-zone
@@ -647,11 +646,8 @@ func _build_hunt_table() -> void:
  _box(studio,Vector3(3.75,1.7,0.18),Vector3(-6.5,2.75,4.15),DARK)
  _box(studio,Vector3(3.84,0.12,0.22),Vector3(-6.5,3.64,4.15),RED,true)
  stage_clock=_text(studio,"02:00",Vector3(-6.5,2.75,4.35),111,0.0079,WHITE)
- # Separate rear and side LED geometry mirroring the Chase studio's depth.
- for i in range(13):
-  var x:float=(float(i)-6.0)*1.82
-  _box(studio,Vector3(0.16,6.2,0.16),Vector3(x,3.0,-13.84),RED if i%2==0 else ORANGE,true)
- # Keep the side wings open; LED columns are built separately.
+ # The table has one readable prize fascia; the host has a separate backdrop.
+ # Do not add a second field of LEDs across the rear of the set.
 
 func _seat(position: Vector3) -> void:
  _box(studio,Vector3(0.95,0.23,0.92),position+Vector3(0,0.68,0),DARK)
