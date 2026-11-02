@@ -48,6 +48,8 @@ assert.ok(output.includes('builderSeconds'),'Show timer dropdown missing');
 verify('Edit Host','go("host")');
 for(const select of ['host_hair','host_style','host_glasses','host_braces','host_outfit'])assert.ok(output.includes('<select id="'+select+'"'),'Host dropdown missing: '+select);
 verify('Music Importer','go("music")');
+for(const hunter of ['The Professor','The Red Raider','El Jefe','The Jet','The Warden','The Girl Genius','The Raven'])assert.ok(output.includes('data-music="'+hunter+'"'),'Missing music importer for '+hunter);
+assert.ok(output.includes('data-remove-music=')&&output.includes('data-stop-music='),'Music preview/remove controls missing');
 verify('Career Records','go("records")');
 verify('CASH BUILDER','start("hunt")');
 assert.ok(output.includes('stage3d'),'The Hunt 3D stage container failed to render');
@@ -104,6 +106,8 @@ for(const view of ['stage','close','entrance','den'])assert.ok(output.includes('
 const stageCode=fs.readFileSync(require('node:path').join(__dirname,'app/stage3d.js'),'utf8');
 for(const item of ['buildHunt','buildWolfpack','buildDen','updateDen','HUNTER DEN — LIVE','ENTRANCE TUNNEL','studioLights','stageArch','curvedDesk','mainFloor','ringPlatform','floorChevron','verticalWallFrames'])assert.ok(stageCode.includes(item),'Missing 3D stage component: '+item);
 assert.ok(stageCode.includes('THE GIRL GENIUS'),'Jenny stage station missing');
+assert.ok(stageCode.includes('setIntroHunterCallback')&&stageCode.includes('introHunterIndex'),'Hunter theme changes must follow animated reveal');
+assert.ok(html.includes('setIntroHunterCallback(playHunterTheme)'),'Hunter music not wired to stage introduction');
 assert.ok(stageCode.includes('makeTeamPrizeFascia')&&stageCode.includes('updateTeamPrize'),'The table must have an updatable team-prize LED fascia');
 assert.ok(stageCode.includes('buildContestantAtTable')&&stageCode.includes('setActiveContestant'),'Active contestant model and label missing in Head-to-Head');
 assert.ok(html.includes("setActiveContestant(contestants[s.round]?.name"),'Current contestant must be sent to the stage');
