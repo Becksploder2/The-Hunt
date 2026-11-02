@@ -276,8 +276,8 @@ function chaseClock(seconds){
 function broadcastBug(s){
  const cash=s.phase==='builder', seconds=s.phase==='finalHunter'?s.oppclock:s.clock;
  return '<section class="hunt-tv-bug" aria-label="Time and cash builder broadcast information">'+
- '<div class="tv-bug-time"><span class="tv-bug-label">'+(cash?'CASH BUILDER':'TIME')+'</span><strong id="timer" class="tv-bug-digits">'+chaseClock(seconds)+'</strong></div>'+
- '<div class="tv-bug-money"><span class="tv-bug-label">'+(cash?'CASH EARNED':'TEAM PRIZE')+'</span><strong id="bugMoney">$'+(cash?s.roundMoney:s.money).toLocaleString()+'</strong></div>'+
+ '<div class="tv-bug-money"><span class="tv-bug-label">'+(cash?(s.mode==='hunt'?esc(contestants[s.round]?.name||'CONTESTANT')+' · CASH EARNED':'CASH EARNED'):'TEAM PRIZE')+'</span><strong id="bugMoney">$'+(cash?s.roundMoney:s.money).toLocaleString()+'</strong></div>'+
+ '<div class="tv-bug-time"><span class="tv-bug-label">'+(cash?'CASH BUILDER · 10 QUESTIONS':'TIME')+'</span><strong id="timer" class="tv-bug-digits">'+chaseClock(seconds)+'</strong></div>'+
  '<div class="tv-bug-round"><span class="tv-bug-label">'+(cash?'ANSWERS':'SCORE')+'</span><strong id="bugScore">'+(cash?s.builderCount:s.score)+'</strong></div></section>';
 }
 function syncBroadcastBug(s){
