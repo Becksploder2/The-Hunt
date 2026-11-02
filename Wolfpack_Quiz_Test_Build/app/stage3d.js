@@ -231,13 +231,13 @@ function makeIntroLed(){
  // The silhouette and animated Hunter are displayed ON the physical playing
  // surface of the desk, exactly where the normal Chase-like track is shown.
  const compact=mode==='btw';
- const depth=compact?2.92:7.52,width=compact?3.42:3.65;
+ const depth=compact?2.10:2.22,width=compact?3.42:3.58;
  const screen=new THREE.Mesh(
   new THREE.PlaneGeometry(width,depth),
   new THREE.MeshBasicMaterial({map:ledTexture,side:THREE.DoubleSide,depthWrite:false})
  );
  screen.rotation.x=-Math.PI/2;
- screen.position.set(0,1.468,compact?-.35:-.35);
+ screen.position.set(0,1.468,compact?-.35:-.25);
  screen.renderOrder=4;
  scene.add(screen);ledPanel=screen;screen.visible=false;
 }
@@ -297,7 +297,7 @@ function updateIntroductions(now){
 function render(modeValue='hunt',view='stage'){
  const el=document.getElementById('stage3d');
  if(!el){destroy();return}
- if(el===container && mode===modeValue){setView(view);return;}
+ if(el===container && mode===modeValue){return;}
  destroy();container=el;mode=modeValue;
  try{renderer=new THREE.WebGLRenderer({antialias:true,alpha:false});}catch(err){el.textContent='3D rendering unavailable on this computer: '+err.message;return}
  renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,1.5));
