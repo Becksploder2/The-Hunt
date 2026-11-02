@@ -1038,7 +1038,7 @@ func _process(delta: float) -> void:
 func _hunter_sits_and_speaks() -> void:
  # Camera holds the dialogue shot as the Hunter settles into the chair.
  var seat_motion:=create_tween()
- seat_motion.tween_property(hunter_avatar,"position:y",-0.42,0.48).set_trans(Tween.TRANS_SINE)
+ seat_motion.tween_property(hunter_avatar,"position:y",0.33 if mode=="hunt" else -0.42,0.48).set_trans(Tween.TRANS_SINE)
  seat_motion.parallel().tween_property(hunter_avatar,"scale:y",0.82,0.48)
  var shot:=create_tween()
  shot.tween_property(camera,"position",Vector3(4.6,3.05,2.3),0.75)
