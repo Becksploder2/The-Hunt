@@ -162,3 +162,12 @@ textarea{min-height:95px}
 .tv-bug-digits,.tv-bug-money strong,.tv-bug-round strong{font-family:Arial,Segoe UI,sans-serif;font-size:clamp(26px,3.6vw,42px);font-weight:900;line-height:1.17;letter-spacing:.015em;text-shadow:0 2px 2px #0008}
 .tv-bug-money strong{color:#fff}
 @media(max-width:480px){.hunt-tv-bug{grid-template-columns:1fr 1.2fr .7fr}.hunt-tv-bug>div{min-height:66px;padding:7px 5px}.tv-bug-digits,.tv-bug-money strong,.tv-bug-round strong{font-size:clamp(17px,5vw,27px)}.tv-bug-label{font-size:9px;letter-spacing:.03em}}
+
+/* The Chase-equivalent contestant creator keeps extensive piercing options tucked
+   behind one compact disclosure rather than a screen-length checkbox list. */
+.piercings-dropdown{border:2px solid #8cb7d2;border-radius:7px;background:#102c43;margin:4px 0 14px;min-width:0}
+.piercings-dropdown summary{cursor:pointer;padding:17px 16px;color:#fff;font-size:17px;font-weight:750}
+.piercing-grid{padding:10px 15px 18px;display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px}
+.creator-page .piercing-choice{display:flex!important;flex-direction:row!important;align-items:center!important;gap:9px!important;font-size:13px!important;font-weight:550!important;line-height:1.35!important;margin:0!important}
+.creator-page .piercing-choice input[type=checkbox]{width:19px!important;min-height:19px!important;height:19px!important;flex:none!important;margin:0!important;padding:0!important}
+.creator-page input[type=range]{height:32px!important;min-height:32px!important;padding:0!important;accent-color:#df283e;background:transparent!important}
