@@ -488,4 +488,5 @@ document.addEventListener('change',async e=>{if(e.target.id==='professorPortrait
  }catch(err){alert('Could not save theme: '+err.message)}
  return;
 }if(e.target.id!=='importQuestions')return;try{let arr=JSON.parse(await e.target.files[0].text());if(!Array.isArray(arr)||!arr.length||!arr.every(validQuestion))throw Error('Invalid question format');questions=arr;save('wolf_questions',questions);create();alert(`Imported ${questions.length} questions.`)}catch(err){alert('Import failed: '+err.message)}});
-loadSavedHunterThemes().finally(()=>render());
+render();
+loadSavedHunterThemes();
