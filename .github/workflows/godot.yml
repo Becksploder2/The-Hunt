@@ -18,10 +18,23 @@ jobs:
           version: 4.4.1
           use-dotnet: false
           include-templates: true
-      - name: Import and validate Godot project
-        run: godot --headless --path godot --import --quit
-      - name: Validate playable main scene
-        run: timeout 20s godot --headless --path godot --quit-after 90 || test "$?" -eq 124
+      - name: Import and validate GDScript without ignored parse errors
+        run: |
+          set -o pipefail
+          godot --headless --path godot --import --quit 2>&1 | tee godot-import.log
+          if grep -E "SCRIPT ERROR|Parse Error|Failed to load script|GDScript::reload|ERROR:" godot-import.log; then
+            echo "Godot import emitted script errors"
+            exit 1
+          fi
+      - name: Verify actual startup and both game modes
+        run: |
+          set -o pipefail
+          godot --headless --path godot --script res://tests/smoke_test.gd 2>&1 | tee godot-smoke.log
+          if grep -E "SCRIPT ERROR|Parse Error|Failed to load script|GODOT SMOKE TEST FAILED|ERROR:" godot-smoke.log; then
+            echo "Godot startup emitted errors"
+            exit 1
+          fi
+          grep -F "GODOT SMOKE TEST PASS" godot-smoke.log
       - name: Export Windows desktop
         run: |
           mkdir -p dist
