@@ -130,35 +130,51 @@ function updateTeamPrize(amount=0,label='TEAM PRIZE',round=0){
  teamPrizeTexture.needsUpdate=true;
 }
 function buildContestantAtTable(){
- // Active contestant stands at the near end of the table facing the Hunter.
- activeContestantModel=new THREE.Group();activeContestantModel.position.set(0,0,4.68);
- scene.add(activeContestantModel);
- const clothes=makeMat(0x981528),skin=makeMat(0xd8a58a);
- const body=new THREE.Mesh(new THREE.CylinderGeometry(.37,.46,.95,16),clothes);body.position.y=1.28;activeContestantModel.add(body);
- const head=new THREE.Mesh(new THREE.SphereGeometry(.29,16,12),skin);head.position.y=2.02;activeContestantModel.add(head);
- for(const x of [-.22,.22]){
-  block(.16,.86,.19,x,.43,0,mDark,activeContestantModel);
-  block(.16,.68,.19,x*1.8,1.22,0,skin,activeContestantModel);
- }
- // Default figure faces the far end of the board, toward the Hunter.
+ // Live contestant at the near end of the seated quiz table.
+ activeContestantModel=new THREE.Group();activeContestantModel.position.set(0,0,4.68);scene.add(activeContestantModel);
  activeContestantModel.rotation.y=Math.PI;
  activeContestantLabel=textSurface('CONTESTANT',0,.64,4.99,2.7,.4);
  activeContestantModel.visible=false;activeContestantLabel.visible=false;
 }
-function setActiveContestant(name,visible){
+function setActiveContestant(name,visible,look={}){
  if(!activeContestantModel)return;
  const show=Boolean(visible);
  activeContestantModel.visible=show;
  if(activeContestantLabel)activeContestantLabel.visible=show;
  const safeName=String(name||'CONTESTANT').trim().slice(0,28);
- if(show&&safeName!==activeContestantName&&activeContestantLabel){
-  // Repaint the name texture without rebuilding the entire set.
-  const canvas=activeContestantLabel.material.map.image,ctx=canvas.getContext('2d');
-  ctx.fillStyle='#080808';ctx.fillRect(0,0,canvas.width,canvas.height);
-  ctx.strokeStyle='#d9293d';ctx.lineWidth=12;ctx.strokeRect(5,5,canvas.width-10,canvas.height-10);
-  ctx.fillStyle='#ffffff';ctx.font='bold 48px Arial';ctx.textAlign='center';ctx.textBaseline='middle';
-  ctx.fillText(safeName.toUpperCase(),canvas.width/2,canvas.height/2,canvas.width-28);
-  activeContestantLabel.material.map.needsUpdate=true;activeContestantName=safeName;
+ const fingerprint=safeName+'|'+JSON.stringify(look||{});
+ if(show&&fingerprint!==activeContestantName){
+  activeContestantName=fingerprint;
+  while(activeContestantModel.children.length){
+   const child=activeContestantModel.children[0];activeContestantModel.remove(child);
+   child.geometry?.dispose();child.material?.dispose();
+  }
+  const clothes={Purple:0x713c91,Red:0xa21d38,Blue:0x3158a1,Green:0x23774b,Gold:0xbe9b36,Black:0x191c24};
+  const skins={Light:0xf2c5a1,Medium:0xd8a58a,Tan:0xb4744d,Dark:0x704635};
+  const hairs={Brown:0x573a2b,Black:0x1b1a25,Blonde:0xe4bc64,Red:0xad482c,Gray:0x9ca3ac};
+  const shirt=makeMat(clothes[look.outfit]||0x981528),skin=makeMat(skins[look.skin]||skins.Medium),hair=makeMat(hairs[look.hair]||hairs.Brown);
+  const tall=Math.max(.82,Math.min(1.18,(Number(look.height_inches)||66)/66));
+  const body=new THREE.Mesh(new THREE.CylinderGeometry(.36,.45,.90,16),shirt);body.position.y=1.26;activeContestantModel.add(body);
+  const head=new THREE.Mesh(new THREE.SphereGeometry(.27,16,12),skin);head.position.y=2.01;activeContestantModel.add(head);
+  for(const x of [-.22,.22]){block(.16,.86,.19,x,.43,0,mDark,activeContestantModel);block(.16,.66,.19,x*1.9,1.25,0,skin,activeContestantModel);}
+  if(look.hairStyle!=='Bald'){
+   const cap=new THREE.Mesh(new THREE.SphereGeometry(.285,16,12,0,Math.PI*2,0,Math.PI*.47),hair);cap.position.y=2.05;activeContestantModel.add(cap);
+   if(look.hairStyle==='Long')for(const x of [-.23,.23])block(.14,.48,.17,x,1.84,0,hair,activeContestantModel);
+  }
+  if(look.glasses&&look.glasses!=='No'&&look.glasses!=='None'){
+   for(const x of [-.12,.12])block(.16,.11,.035,x,2.025,-.245,mDark,activeContestantModel);
+   block(.075,.025,.035,0,2.025,-.265,mDark,activeContestantModel);
+  }
+  if(look.braces==='Yes'){block(.20,.045,.025,0,1.895,-.268,mWhite,activeContestantModel);}
+  activeContestantModel.scale.set(1,tall,1);
+  if(activeContestantLabel){
+   const canvas=activeContestantLabel.material.map.image,ctx=canvas.getContext('2d');
+   ctx.fillStyle='#080808';ctx.fillRect(0,0,canvas.width,canvas.height);
+   ctx.strokeStyle='#d9293d';ctx.lineWidth=12;ctx.strokeRect(5,5,canvas.width-10,canvas.height-10);
+   ctx.fillStyle='#ffffff';ctx.font='bold 48px Arial';ctx.textAlign='center';ctx.textBaseline='middle';
+   ctx.fillText(safeName.toUpperCase(),canvas.width/2,canvas.height/2,canvas.width-28);
+   activeContestantLabel.material.map.needsUpdate=true;
+  }
  }
 }
 function buildHunt(){
