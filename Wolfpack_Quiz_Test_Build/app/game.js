@@ -328,6 +328,7 @@ function syncBroadcastBug(s){
  const money=document.getElementById('bugMoney');if(money)money.textContent='$'+(s.phase==='builder'?s.roundMoney:s.money).toLocaleString();
  const score=document.getElementById('bugScore');if(score)score.textContent=s.phase==='builder'?s.builderCount:s.score;
  if(window.wolfStage?.updateTeamPrize)window.wolfStage.updateTeamPrize(s.money,s.phase==='builder'?'TEAM PRIZE · CASH BUILDER':'TEAM PRIZE',s.roundMoney);
+ if(window.wolfStage?.updateStageClock)window.wolfStage.updateStageClock(s.phase==='builder'?'CASH BUILDER':s.phase==='final'?'FINAL CHASE':s.phase==='qual'?'HEAD TO HEAD':'TIME',s.phase==='finalHunter'?s.oppclock:s.clock,s.phase==='builder'?s.roundMoney:s.money);
 }
 
 function draw(){
@@ -344,6 +345,7 @@ function draw(){
   window.wolfStage.updateDen(s.q?.q,s.lastCorrect);
   if(window.wolfStage.setActiveContestant)window.wolfStage.setActiveContestant(contestants[s.round]?.name||'Contestant',s.mode==='hunt'&&['qualIntro','offers','qual'].includes(s.phase),contestants[s.round]);
   if(window.wolfStage.updateTeamPrize)window.wolfStage.updateTeamPrize(s.money,s.phase==='builder'?'TEAM PRIZE · CASH BUILDER':'TEAM PRIZE',s.roundMoney);
+ if(window.wolfStage?.updateStageClock)window.wolfStage.updateStageClock(s.phase==='builder'?'CASH BUILDER':s.phase==='final'?'FINAL CHASE':s.phase==='qual'?'HEAD TO HEAD':'TIME',s.phase==='finalHunter'?s.oppclock:s.clock,s.phase==='builder'?s.roundMoney:s.money);
   if(window.wolfStage.setWardenMode)window.wolfStage.setWardenMode(s.phase==='qualIntro'&&selectedHunter(s.round)==='The Warden');
   if(window.wolfStage.setIntroHunterCallback)window.wolfStage.setIntroHunterCallback(playHunterTheme);
   if(window.wolfStage.playIntroductions){
