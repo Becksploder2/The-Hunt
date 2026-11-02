@@ -40,6 +40,11 @@ func _verify() -> void:
  timer.start()
  game.call("_question_screen")
  await process_frame
+ var lower_third: PanelContainer=game.get("question_panel")
+ var answer_buttons: Array=game.get("question_buttons")
+ if lower_third==null or not lower_third.visible or answer_buttons.size()!=4:
+  _fail("Broadcast red-black question and four answers did not render")
+  return
  if timer.is_stopped():
   _fail("Cash Builder clock stopped while displaying first question")
   return
@@ -56,6 +61,15 @@ func _verify() -> void:
  timer.stop()
  game.call("_begin_hunter_intro")
  await process_frame
+ var dialogue_box: PanelContainer=game.get("dialogue_panel")
+ if dialogue_box==null or not dialogue_box.visible:
+  _fail("RPG sentence dialogue box was not shown during Hunter entrance")
+  return
+ var previous_sentence: String=(game.get("dialogue_line") as Label).text
+ game.call("_next_dialogue_sentence")
+ if (game.get("dialogue_line") as Label).text==previous_sentence:
+  _fail("Dialogue did not advance by one sentence")
+  return
  if game.get("host_rear_screen")==null:
   _fail("Host rear studio screen missing")
   return
