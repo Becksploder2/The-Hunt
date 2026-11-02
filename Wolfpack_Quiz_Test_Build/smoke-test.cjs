@@ -14,7 +14,7 @@ const context={
    addEventListener(){}
  },
  alert(){},confirm(){return true},
- setInterval(){return 1},clearInterval(){}
+ setInterval(){return 1},clearInterval(){},setTimeout(){return 1}
 };
 vm.createContext(context);
 vm.runInContext(html,context,{filename:'game.js',timeout:3000});
