@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 const orange=0xff7900, black=0x090909;
+let wardenMode=false,wardenSign=null,wardenLight=null;
 let scene,camera,renderer,container,current='stage',mode='',animation,denCam,stageCam,closeCam,entranceCam,denDisplay,denReaction='WATCHING',denQuestion='LIVE QUESTION',denHunters=[];
 const makeMat=(color,emissive=0)=>new THREE.MeshStandardMaterial({color,roughness:.42,metalness:.28,emissive,emissiveIntensity:.23});
 const mDark=makeMat(0x111111),mMetal=makeMat(0x414141),mOrange=makeMat(orange,0x552200),mWhite=makeMat(0xffffff);
@@ -165,6 +166,22 @@ function updateDen(question,correct){
  denHunters.forEach((p,i)=>{p.head.position.y=2.12+(correct===false?.12:0)+(i%2)*.03});
 }
 
+function addWardenStageEffects(){
+ // Warden entrance cue uses original graphics: courtroom brass, gavel, and cell-door bars.
+ const frame=new THREE.Group();frame.position.set(0,0,0);scene.add(frame);
+ block(3.3,2.3,.12,0,3.3,-6.71,mMetal,frame);
+ for(let n=-2;n<=2;n++)block(.12,2.06,.16,n*.55,3.32,-6.58,mGold,frame);
+ block(3.4,.22,.16,0,4.5,-6.57,mGold,frame);
+ const court=textSurface('THE WARDEN  •  CASE CLOSED',0,2.35,-6.43,7.4,.46,frame);
+ wardenSign=frame;frame.visible=wardenMode;
+ wardenLight=new THREE.PointLight(0xffa64d,20,12);
+ wardenLight.position.set(0,4,-5.4);wardenLight.visible=wardenMode;scene.add(wardenLight);
+}
+function setWardenMode(enabled){
+ wardenMode=Boolean(enabled);
+ if(wardenSign)wardenSign.visible=wardenMode;
+ if(wardenLight)wardenLight.visible=wardenMode;
+}
 function render(modeValue='hunt',view='stage'){
  const el=document.getElementById('stage3d');
  if(!el){destroy();return}
@@ -179,6 +196,7 @@ function render(modeValue='hunt',view='stage'){
  scene.add(new THREE.AmbientLight(0xffffff,1.8));
  const spot=new THREE.DirectionalLight(0xffffff,2);spot.position.set(3,9,8);scene.add(spot);
  if(mode==='btw')buildWolfpack();else buildHunt();
+ addWardenStageEffects();
  const den=new THREE.Group();den.userData.isDen=true;den.position.x=30;scene.add(den);buildDen(den);
  const denLight=new THREE.PointLight(orange,85,25);denLight.position.set(30,4,2);scene.add(denLight);
  stageCam=new THREE.PerspectiveCamera(58,(el.clientWidth||850)/(el.clientHeight||420),.1,100);
@@ -192,5 +210,5 @@ function render(modeValue='hunt',view='stage'){
  animate();
 }
 function setView(view){current=['den','close','entrance'].includes(view)?view:'stage';camera=current==='den'?denCam:current==='close'?closeCam:current==='entrance'?entranceCam:stageCam;}
-function destroy(){if(animation)cancelAnimationFrame(animation);animation=null;if(renderer){renderer.dispose();if(renderer.domElement?.parentNode)renderer.domElement.parentNode.removeChild(renderer.domElement);}renderer=null;container=null;scene=null;camera=null;}
-window.wolfStage={render,setView,destroy,updateDen};
+function destroy(){if(animation)cancelAnimationFrame(animation);animation=null;if(renderer){renderer.dispose();if(renderer.domElement?.parentNode)renderer.domElement.parentNode.removeChild(renderer.domElement);}renderer=null;container=null;scene=null;camera=null;wardenSign=null;wardenLight=null;}
+window.wolfStage={render,setView,destroy,updateDen,setWardenMode};
