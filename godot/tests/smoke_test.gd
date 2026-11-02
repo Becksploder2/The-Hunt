@@ -36,6 +36,15 @@ func _verify() -> void:
   return
  game.call("_begin_hunter_intro")
  await process_frame
+ var route: Array=game.get("entrance_waypoints")
+ var bridge: Array=game.get("bridge_lights")
+ if route.size()<5 or bridge.size()<10:
+  _fail("Detached cave bridge and waypoint walkout are missing")
+  return
+ var sloped: Node3D=game.get("tilt_table")
+ if sloped==null or absf(sloped.rotation_degrees.x)<5.0:
+  _fail("Chase-style tilted quiz table missing")
+  return
  if game.get("phase") != "entrance" or game.get("hunter_avatar") == null:
   _fail("Hunter entrance did not initialize")
   return
