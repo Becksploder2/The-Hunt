@@ -3,6 +3,7 @@ const orange=0xff7900, black=0x090909;
 let wardenMode=false,wardenSign=null,wardenLight=null;
 let ledSurface=null,ledCtx=null,ledTexture=null,ledTimeline=null,ledPanel=null,introCam=null,cameraBeforeIntro=null;
 let professorPortrait=null,professorPortraitSrc='';
+let teamPrizeCanvas=null,teamPrizeCtx=null,teamPrizeTexture=null,teamPrizeScreen=null,teamPrizeLast='';
 let scene,camera,renderer,container,current='stage',mode='',animation,denCam,stageCam,closeCam,entranceCam,denDisplay,denReaction='WATCHING',denQuestion='LIVE QUESTION',denHunters=[];
 const makeMat=(color,emissive=0)=>new THREE.MeshStandardMaterial({color,roughness:.42,metalness:.28,emissive,emissiveIntensity:.23});
 const mDark=makeMat(0x111111),mMetal=makeMat(0x414141),mOrange=makeMat(orange,0x552200),mWhite=makeMat(0xffffff);
@@ -95,14 +96,38 @@ function buildChaseLedTable(compact=false){
  }
  block(width+.4,.17,.22,0,.96,front+.11,mOrange);
  block(width+.4,.17,.22,0,.96,rear-.11,mIce);
- // Distinctive Wolfpack illuminated fascia, leaving the table surface visible.
- textSurface(compact?'WOLFPACK SHOWDOWN':'THE HUNT  •  CHASE BOARD',0,.81,front+.235,width,.40);
+ // Real-time team prize display built into the front face of the playing table.
+ // Not a floating title or static text mesh: its CanvasTexture updates as money is earned.
+ makeTeamPrizeFascia(front,width);
  for(const z of [rear+.6,front-.6]){
   const lamp=new THREE.PointLight(0x238fd8,3.4,4.8);
   lamp.position.set(0,1.65,z);scene.add(lamp);
  }
 }
 
+function makeTeamPrizeFascia(front,width){
+ teamPrizeCanvas=document.createElement('canvas');teamPrizeCanvas.width=1024;teamPrizeCanvas.height=256;
+ teamPrizeCtx=teamPrizeCanvas.getContext('2d');
+ teamPrizeTexture=new THREE.CanvasTexture(teamPrizeCanvas);teamPrizeTexture.colorSpace=THREE.SRGBColorSpace;
+ teamPrizeScreen=new THREE.Mesh(new THREE.PlaneGeometry(width,.69),
+  new THREE.MeshBasicMaterial({map:teamPrizeTexture,side:THREE.DoubleSide}));
+ teamPrizeScreen.position.set(0,.78,front+.27);
+ teamPrizeScreen.renderOrder=2;scene.add(teamPrizeScreen);
+ updateTeamPrize(0,'TEAM PRIZE',0);
+}
+function updateTeamPrize(amount=0,label='TEAM PRIZE',round=0){
+ if(!teamPrizeCtx||!teamPrizeTexture)return;
+ const signature=amount+'|'+label+'|'+round;if(signature===teamPrizeLast)return;teamPrizeLast=signature;
+ const c=teamPrizeCtx;
+ c.fillStyle='#080808';c.fillRect(0,0,1024,256);
+ c.fillStyle='#b90f22';c.fillRect(0,0,1024,43);c.fillRect(0,219,1024,37);
+ c.fillStyle='#f63042';c.fillRect(0,43,1024,5);c.fillRect(0,214,1024,5);
+ c.textAlign='center';c.textBaseline='middle';
+ c.fillStyle='#fff';c.font='bold 44px Arial';c.fillText(String(label).toUpperCase(),512,79,990);
+ c.fillStyle='#fff';c.font='bold 116px Arial';c.fillText('$'+Math.max(0,Number(amount)||0).toLocaleString('en-US'),512,163,990);
+ if(round>0){c.fillStyle='#ffffff';c.font='bold 26px Arial';c.fillText('ROUND $'+round.toLocaleString('en-US'),512,238,940);}
+ teamPrizeTexture.needsUpdate=true;
+}
 function buildHunt(){
  panelWall();mainFloor();truss();studioLights();stageArch();verticalWallFrames();doorway(-7.0,-7.28,'HUNTER TUNNEL');
  for(let k=0;k<4;k++)floorChevron(-5.5+k*3.6,3.65,-1);
@@ -352,5 +377,5 @@ function render(modeValue='hunt',view='stage'){
  animate();
 }
 function setView(view){current=['den','close','entrance'].includes(view)?view:'stage';const selected=current==='den'?denCam:current==='close'?closeCam:current==='entrance'?entranceCam:stageCam;if(ledTimeline)cameraBeforeIntro=selected;else camera=selected;}
-function destroy(){if(animation)cancelAnimationFrame(animation);animation=null;if(renderer){renderer.dispose();if(renderer.domElement?.parentNode)renderer.domElement.parentNode.removeChild(renderer.domElement);}renderer=null;container=null;scene=null;camera=null;wardenSign=null;wardenLight=null;ledPanel=null;ledTimeline=null;ledCtx=null;if(ledTexture)ledTexture.dispose();ledTexture=null;ledSurface=null;introCam=null;cameraBeforeIntro=null;}
-window.wolfStage={render,setView,destroy,updateDen,setWardenMode,playIntroductions,stopIntroductions,setProfessorPortrait};
+function destroy(){if(animation)cancelAnimationFrame(animation);animation=null;if(renderer){renderer.dispose();if(renderer.domElement?.parentNode)renderer.domElement.parentNode.removeChild(renderer.domElement);}renderer=null;container=null;scene=null;camera=null;wardenSign=null;wardenLight=null;ledPanel=null;ledTimeline=null;ledCtx=null;if(ledTexture)ledTexture.dispose();ledTexture=null;ledSurface=null;introCam=null;cameraBeforeIntro=null;teamPrizeLast='';teamPrizeCtx=null;teamPrizeCanvas=null;teamPrizeScreen=null;if(teamPrizeTexture)teamPrizeTexture.dispose();teamPrizeTexture=null;}
+window.wolfStage={render,setView,destroy,updateDen,setWardenMode,playIntroductions,stopIntroductions,setProfessorPortrait,updateTeamPrize};
