@@ -206,7 +206,7 @@ function startTimer(){
   }else if(s.phase==='hunter'){if(s.turn==='player')s.clock--;else s.oppclock--;}
   else return;
   const el=document.getElementById('timer');
-  if(el)el.textContent=s.phase==='builder'?'Cash Builder: '+s.clock+'s':'Contestant: '+s.clock+'s · Hunters: '+s.oppclock+'s';
+  if(el)syncBroadcastBug(s);
   if(s.phase==='builder'&&s.clock<=0){finishBuilder();return}
   if(s.phase==='final'&&s.clock<=0){s.phase='finalHunter';advance();return}
   if(s.phase==='finalHunter'&&s.oppclock<=0){finish(true);return}
@@ -235,6 +235,24 @@ function gamePanel(s){
  if(s.phase==='duel')return '<div class="card"><h2>Wolfpack Clock Battle</h2><p>'+s.selectedHunters.map(esc).join(' · ')+'</p><p>Contestant: '+s.clock+' seconds · Hunters: '+s.oppclock+' seconds · Turn: '+s.turn+'</p></div>';
  return '';
 }
+function chaseClock(seconds){
+ const n=Math.max(0,Math.floor(Number(seconds)||0));
+ return String(Math.floor(n/60)).padStart(2,'0')+':'+String(n%60).padStart(2,'0');
+}
+function broadcastBug(s){
+ const cash=s.phase==='builder', seconds=s.phase==='finalHunter'?s.oppclock:s.clock;
+ return '<section class="hunt-tv-bug" aria-label="Time and cash builder broadcast information">'+
+ '<div class="tv-bug-time"><span class="tv-bug-label">'+(cash?'CASH BUILDER':'TIME')+'</span><strong id="timer" class="tv-bug-digits">'+chaseClock(seconds)+'</strong></div>'+
+ '<div class="tv-bug-money"><span class="tv-bug-label">'+(cash?'CASH EARNED':'TEAM PRIZE')+'</span><strong id="bugMoney">$'+(cash?s.roundMoney:s.money).toLocaleString()+'</strong></div>'+
+ '<div class="tv-bug-round"><span class="tv-bug-label">'+(cash?'ANSWERS':'SCORE')+'</span><strong id="bugScore">'+(cash?s.builderCount:s.score)+'</strong></div></section>';
+}
+function syncBroadcastBug(s){
+ const timer=document.getElementById('timer');if(timer)timer.textContent=chaseClock(s.phase==='finalHunter'?s.oppclock:s.clock);
+ const money=document.getElementById('bugMoney');if(money)money.textContent='$'+(s.phase==='builder'?s.roundMoney:s.money).toLocaleString();
+ const score=document.getElementById('bugScore');if(score)score.textContent=s.phase==='builder'?s.builderCount:s.score;
+ if(window.wolfStage?.updateTeamPrize)window.wolfStage.updateTeamPrize(s.money,s.phase==='builder'?'TEAM PRIZE · CASH BUILDER':'TEAM PRIZE',s.roundMoney);
+}
+
 function draw(){
  const s=session;if(!s)return home();
  const heading=s.mode==='hunt'?'THE HUNT':s.mode==='btw'?'BEAT THE WOLFPACK':s.mode==='trials'?'WOLFPACK TRIALS':'BECOME A HUNTER';
@@ -242,11 +260,12 @@ function draw(){
  const isIntro=['builderIntro','qualIntro'].includes(s.phase);
  const choice=['choice','offers'].includes(s.phase);
  const timerText=s.phase==='builder'?'Cash Builder: '+s.clock+'s':'Contestant: '+s.clock+'s · Hunters: '+s.oppclock+'s';
- shell('<p class="eyebrow">'+heading+' · '+phase+'</p><h1>'+phase+'</h1><div class="status broadcast-scorebar"><span>Team prize: $'+s.money.toLocaleString()+'</span><span>Round money: $'+s.roundMoney.toLocaleString()+'</span><span>Correct: '+s.score+'</span><span>Hunter: '+s.opp+'</span><span>Qualified: '+s.survivors+'</span><span id="timer" class="metal-timer">'+timerText+'</span></div><div class="message metallic-message">'+esc(s.log)+'</div>'+setHtml(s)+gamePanel(s)+(isIntro?introHtml(s):s.phase==='choice'?choiceHtml(s):s.phase==='offers'||s.phase==='bonusOffer'?'':'<div class="question broadcast-question">'+esc(s.q.q)+'</div><div class="answers broadcast-answers">'+s.q.opts.map((a,i)=>'<button class="broadcast-answer" data-answer="'+i+'">'+esc(a)+'</button>').join('')+'</div>'));
+ shell('<p class="eyebrow">'+heading+' · '+phase+'</p><h1>'+phase+'</h1><div class="status broadcast-scorebar"><span>Team prize: $'+s.money.toLocaleString()+'</span><span>Round money: $'+s.roundMoney.toLocaleString()+'</span><span>Correct: '+s.score+'</span><span>Hunter: '+s.opp+'</span><span>Qualified: '+s.survivors+'</span></div>'+broadcastBug(s)+'<div class="message metallic-message">'+esc(s.log)+'</div>'+setHtml(s)+gamePanel(s)+(isIntro?introHtml(s):s.phase==='choice'?choiceHtml(s):s.phase==='offers'||s.phase==='bonusOffer'?'':'<div class="question broadcast-question">'+esc(s.q.q)+'</div><div class="answers broadcast-answers">'+s.q.opts.map((a,i)=>'<button class="broadcast-answer" data-answer="'+i+'">'+esc(a)+'</button>').join('')+'</div>'));
  if(window.wolfStage){
   window.wolfStage.render(s.mode==='btw'?'btw':'hunt');
   if(window.wolfStage.setProfessorPortrait)window.wolfStage.setProfessorPortrait(localStorage.getItem('wolf_professor_photo'));
   window.wolfStage.updateDen(s.q?.q,s.lastCorrect);
+  if(window.wolfStage.updateTeamPrize)window.wolfStage.updateTeamPrize(s.money,s.phase==='builder'?'TEAM PRIZE · CASH BUILDER':'TEAM PRIZE',s.roundMoney);
   if(window.wolfStage.setWardenMode)window.wolfStage.setWardenMode(s.phase==='qualIntro'&&selectedHunter(s.round)==='The Warden');
   if(window.wolfStage.playIntroductions){
    if(s.phase==='qualIntro')window.wolfStage.playIntroductions([selectedHunter(s.round)]);
