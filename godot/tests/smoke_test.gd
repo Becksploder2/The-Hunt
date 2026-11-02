@@ -36,6 +36,16 @@ func _verify() -> void:
   return
  game.call("_begin_hunter_intro")
  await process_frame
+ var screen: Node3D=game.get("hunter_tron")
+ if screen==null:
+  _fail("Hunter screen missing")
+  return
+ game.call("_set_hunter_presentation","The Red Raider",true)
+ var text_node: Label3D=game.get("tron_title")
+ if text_node.text!="THE RED RAIDER":
+  _fail("Hunter identity did not update")
+  return
+ game.call("_set_hunter_presentation","The Professor",true)
  var route: Array=game.get("entrance_waypoints")
  var bridge: Array=game.get("bridge_lights")
  if route.size()<5 or bridge.size()<10:
