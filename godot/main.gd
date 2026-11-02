@@ -126,6 +126,18 @@ var studio: Node3D
 var camera: Camera3D
 var animation_player: AnimationPlayer
 var light_main: DirectionalLight3D
+var dialogue_panel: PanelContainer
+var dialogue_speaker: Label
+var dialogue_line: Label
+var dialogue_advance: Button
+var dialogue_queue: Array[String] = []
+var dialogue_active := false
+var question_panel: PanelContainer
+var question_column: VBoxContainer
+var question_title: Label
+var answer_grid: GridContainer
+var question_buttons: Array[Button] = []
+var question_mode := false
 var ui: CanvasLayer
 var panel: PanelContainer
 var content: VBoxContainer
@@ -165,10 +177,11 @@ func _ready() -> void:
 
 func _setup_world() -> void:
  camera = Camera3D.new()
- camera.position = Vector3(0, 9.3, 23.5)
+ camera.position = Vector3(0, 7.0, 15.0)
+ camera.fov=61.0
  camera.fov = 73.0
  add_child(camera)
- camera.look_at(Vector3(0, 2.0, -3.0))
+ camera.look_at(Vector3(0, 1.8, -2.1))
  camera.current = true
  var sun := DirectionalLight3D.new()
  sun.rotation_degrees = Vector3(-60,-30,0)
@@ -696,12 +709,145 @@ func _setup_ui() -> void:
  content=VBoxContainer.new()
  content.add_theme_constant_override("separation",9)
  panel.add_child(content)
+ _setup_broadcast_overlays()
 
 func _clear_ui() -> void:
  # Only clear presentation widgets. Never stop a live clock during question redraw.
+ if question_panel != null:
+  question_panel.visible=false
+  question_mode=false
+ if dialogue_panel != null:
+  dialogue_panel.visible=false
+  dialogue_active=false
+  dialogue_queue.clear()
+ panel.visible=true
  for child in content.get_children():
   content.remove_child(child)
   child.queue_free()
+
+func _frame_style(bg: Color, edge: Color, thickness: int=2) -> StyleBoxFlat:
+ var style:=StyleBoxFlat.new()
+ style.bg_color=bg
+ style.border_color=edge
+ style.set_border_width_all(thickness)
+ style.set_corner_radius_all(7)
+ style.set_content_margin_all(13)
+ return style
+
+func _setup_broadcast_overlays() -> void:
+ # Separate overlays keep the playable stage visible while questions and
+ # one-sentence conversation captions occupy the bottom of the screen.
+ question_panel=PanelContainer.new()
+ question_panel.name="HuntQuestionLowerThird"
+ question_panel.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_WIDE)
+ question_panel.offset_left=90
+ question_panel.offset_right=-90
+ question_panel.offset_top=-315
+ question_panel.offset_bottom=-14
+ question_panel.add_theme_stylebox_override("panel",_frame_style(Color("#090b10ed"),RED,3))
+ ui.add_child(question_panel)
+ question_column=VBoxContainer.new()
+ question_column.add_theme_constant_override("separation",8)
+ question_panel.add_child(question_column)
+ question_title=Label.new()
+ question_title.name="BroadcastQuestion"
+ question_title.autowrap_mode=TextServer.AUTOWRAP_WORD_SMART
+ question_title.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER
+ question_title.add_theme_font_size_override("font_size",25)
+ question_title.add_theme_color_override("font_color",WHITE)
+ question_title.custom_minimum_size=Vector2(0,80)
+ question_column.add_child(question_title)
+ answer_grid=GridContainer.new()
+ answer_grid.columns=2
+ answer_grid.add_theme_constant_override("h_separation",9)
+ answer_grid.add_theme_constant_override("v_separation",8)
+ question_column.add_child(answer_grid)
+ question_panel.visible=false
+ dialogue_panel=PanelContainer.new()
+ dialogue_panel.name="SentenceDialogueBubble"
+ dialogue_panel.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_WIDE)
+ dialogue_panel.offset_left=115
+ dialogue_panel.offset_right=-115
+ dialogue_panel.offset_top=-153
+ dialogue_panel.offset_bottom=-14
+ dialogue_panel.add_theme_stylebox_override("panel",_frame_style(Color("#090b11ef"),RED,3))
+ ui.add_child(dialogue_panel)
+ var layout:=VBoxContainer.new()
+ layout.add_theme_constant_override("separation",5)
+ dialogue_panel.add_child(layout)
+ dialogue_speaker=Label.new()
+ dialogue_speaker.name="SpeakerName"
+ dialogue_speaker.add_theme_color_override("font_color",ORANGE)
+ dialogue_speaker.add_theme_font_size_override("font_size",19)
+ layout.add_child(dialogue_speaker)
+ dialogue_line=Label.new()
+ dialogue_line.name="SentenceText"
+ dialogue_line.autowrap_mode=TextServer.AUTOWRAP_WORD_SMART
+ dialogue_line.add_theme_color_override("font_color",WHITE)
+ dialogue_line.add_theme_font_size_override("font_size",22)
+ layout.add_child(dialogue_line)
+ dialogue_advance=Button.new()
+ dialogue_advance.text="NEXT  ▶"
+ dialogue_advance.custom_minimum_size=Vector2(120,30)
+ dialogue_advance.pressed.connect(_next_dialogue_sentence)
+ layout.add_child(dialogue_advance)
+ dialogue_panel.visible=false
+
+func _show_dialogue(speaker: String, sentences: Array[String]) -> void:
+ if dialogue_panel==null:
+  return
+ question_panel.visible=false
+ dialogue_queue=sentences.duplicate()
+ dialogue_speaker.text=speaker.to_upper()
+ dialogue_active=true
+ dialogue_panel.visible=true
+ _next_dialogue_sentence()
+
+func _next_dialogue_sentence() -> void:
+ if dialogue_queue.is_empty():
+  dialogue_active=false
+  dialogue_panel.visible=false
+  return
+ dialogue_line.text=dialogue_queue.pop_front()
+
+func _unhandled_input(event: InputEvent) -> void:
+ if dialogue_active and event.is_action_pressed("ui_accept"):
+  _next_dialogue_sentence()
+  get_viewport().set_input_as_handled()
+
+func _show_broadcast_question(question: Array, callback: Callable) -> void:
+ dialogue_active=false
+ dialogue_panel.visible=false
+ panel.visible=false
+ question_mode=true
+ question_panel.visible=true
+ question_title.text=str(question[0])
+ for old in answer_grid.get_children():
+  answer_grid.remove_child(old)
+  old.queue_free()
+ question_buttons.clear()
+ for i in range(4):
+  var choice:=i
+  var button:=Button.new()
+  button.name="AnswerOption%d"%i
+  button.text=["A   ","B   ","C   ","D   "][i]+str(question[1][i])
+  button.custom_minimum_size=Vector2(440,70)
+  button.size_flags_horizontal=Control.SIZE_EXPAND_FILL
+  button.add_theme_font_size_override("font_size",20)
+  button.add_theme_color_override("font_color",WHITE)
+  button.add_theme_stylebox_override("normal",_frame_style(Color("#171219f0"),RED,2))
+  button.add_theme_stylebox_override("hover",_frame_style(Color("#69202ff7"),Color("#ff6075"),3))
+  button.add_theme_stylebox_override("pressed",_frame_style(Color("#c32d42"),WHITE,2))
+  button.pressed.connect(func() -> void: callback.call(choice))
+  answer_grid.add_child(button)
+  question_buttons.append(button)
+
+func _reveal_answer(choice: int, correct: bool) -> void:
+ if choice<0 or choice>=question_buttons.size():
+  return
+ var selected:=question_buttons[choice]
+ selected.add_theme_stylebox_override("normal",_frame_style(Color("#bf641b") if correct else Color("#09090b"),WHITE,3))
+ selected.add_theme_stylebox_override("hover",_frame_style(Color("#bf641b") if correct else Color("#09090b"),WHITE,3))
 
 func _label(words: String, large := false) -> Label:
  var label:=Label.new()
@@ -911,8 +1057,8 @@ func _start_show(chosen_mode: String) -> void:
  double_or_nothing=false
  message=SLOGANS.opening if mode=="hunt" else SLOGANS.btw
  _rebuild_studio()
- camera.position=Vector3(0,9.3,23.5)
- camera.look_at(Vector3(0,2.0,-3.0))
+ camera.position=Vector3(0,7.0,15.0)
+ camera.look_at(Vector3(0,1.8,-2.1))
  _builder_intro()
 
 func _builder_intro() -> void:
@@ -1082,8 +1228,8 @@ func _hunter_sits_and_speaks() -> void:
 func _show_offers() -> void:
  countdown.stop()
  tron_active=true
- camera.position=Vector3(0,7.4,13.8)
- camera.look_at(Vector3(0,1.3,-1.0))
+ camera.position=Vector3(0,6.8,13.7)
+ camera.look_at(Vector3(0,1.8,-2.1))
  phase="offers"
  music_director.stop_entrance()
  _clear_ui()
@@ -1108,8 +1254,8 @@ func _head_to_head() -> void:
  contestant_avatar.position=Vector3(0,0,6.3)
  contestant_avatar.rotation.y=PI
  contestant_avatar.visible=true
- camera.position=Vector3(0,7.4,13.8)
- camera.look_at(Vector3(0,1.3,-1.0))
+ camera.position=Vector3(0,6.8,13.7)
+ camera.look_at(Vector3(0,1.8,-2.1))
  phase="head_to_head"
  _clear_ui()
  message=SLOGANS.offers
