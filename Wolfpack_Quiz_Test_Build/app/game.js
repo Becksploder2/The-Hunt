@@ -5,8 +5,8 @@ const base=[
 const app=document.getElementById('app');let screen='home',session=null,tick=null,questions=load('wolf_questions',base),friends=['The Professor','The Red Raider','El Jefe','The Jet','The Warden'],unlocked=load('wolf_unlocked',false);let seed=0;const hunterProfiles=[
  {title:'The Professor',name:'Karli Rae',theme:'Texas Fight',show:'The Hunt',music:'Player import required'},
  {title:'The Red Raider',name:'Scarlett Raines',theme:'Fight Raiders Fight',show:'The Hunt',music:'Player import required'},
- {title:'El Jefe',name:'Eric Herrera',theme:'Original entrance theme',show:'Both shows',music:'Prototype theme'},
- {title:'The Jet',name:'Justin Silva',theme:'Original entrance theme',show:'Both shows',music:'Prototype theme'},
+ {title:'El Jefe',name:'Eric Herrera',theme:'Original entrance theme',show:'Both shows',music:'Prototype theme',personality:'The smartass: sarcastic, quick comebacks, playful condescension'},
+ {title:'The Jet',name:'Justin Silva',theme:'Original entrance theme',show:'Both shows',music:'Prototype theme',country:'Canada',personality:'First Canadian Hunter. The group troll: mischievous, teasing, playful trash talk'},
  {title:'The Warden',name:'Abby Warren',theme:'Original rapid-fire entrance',show:'Both shows',music:'Original theme planned',speed:10,personality:'Fastest-answering Hunter; relentless and precise. Nickname honors her mother’s former job.'},
  {title:'The Raven',name:'Wolfpack Leader',theme:'Wings of the Raven',show:'Both shows',music:'Original theme planned'}
 ];
@@ -61,7 +61,7 @@ function advance(){
  }else if(s.phase==='builder'){
   s.clock=showConfig.builderSeconds;s.builderCount=0;s.roundMoney=0;s.score=0;s.log='Cash Builder: $1,000 for every correct answer.';
  }else if(s.phase==='qualIntro'){
-  s.log='Cash Builder complete: $'+s.roundMoney.toLocaleString()+'. '+selectedHunter(s.round)+' approaches the table.';
+  s.log='Cash Builder complete: $'+s.roundMoney.toLocaleString()+'. '+selectedHunter(s.round)+' approaches the table. '+hunterLine(selectedHunter(s.round),'intro');
   playHunterTheme();
  }else if(s.phase==='offers'){
   let base=Math.max(1000,s.roundMoney);
@@ -91,6 +91,12 @@ function advance(){
  }
  draw();if(['builder','final','finalHunter','duel','hunter'].includes(s.phase))startTimer();
 }
+const hunterLines={
+ 'El Jefe':{intro:'That is an interesting strategy. Wrong, obviously, but interesting.',correct:'I could explain it, but we only have so much time.',wrong:'Well, that was embarrassing. For me, unfortunately.'},
+ 'The Jet':{intro:'Canada has arrived. Try not to take the bait!',correct:'Oh, that one was too easy. Sorry!',wrong:'I was just testing whether you were paying attention. Obviously.'},
+ 'The Warden':{intro:'I answer fast. Keep up.',correct:'Next question.',wrong:'Move on. Faster.'}
+};
+function hunterLine(name,event){return hunterLines[name]?.[event]||''}
 function hunterResponseDelay(s){return s.selectedHunters&&s.selectedHunters.includes('The Warden')?1:3}
 function selectWolfpackHunters(n){
  const lineup=[...friends,'The Raven'];
@@ -197,7 +203,7 @@ function answer(index){
  if(s.phase==='qual'){
   if(good)s.playerStep=Math.min(6,s.playerStep+1);
   else if(Math.random()<.75)s.hunterStep=Math.min(6,s.hunterStep+1);
-  s.log=good?'Contestant advances toward home!':selectedHunter(s.round)+' takes a step closer.';
+  s.log=good?'Contestant advances toward home! '+hunterLine(selectedHunter(s.round),'wrong'):selectedHunter(s.round)+' takes a step closer. '+hunterLine(selectedHunter(s.round),'correct');
   if(s.playerStep>=6){endQualifier(true);return}
   if(s.hunterStep>=s.playerStep){endQualifier(false);return}
   nextTurn();return;
@@ -247,7 +253,7 @@ function hostEditor(){
  shell('<div class="creator-page"><p class="eyebrow">Host Studio</p><h1>Create a Host</h1><p class="sub">Customize Arianna Dawson or create a new host. Dropdown options are fully visible and scrollable.</p><div class="grid"><section class="card"><h2>Active Host</h2><div class="host-avatar"><div class="host-hair">'+(host.hair.includes('Red')?'🦰':'👩')+'</div><strong>'+esc(host.name)+'</strong><span>'+esc(host.glasses)+' · '+esc(host.braces)+'</span></div></section><section class="card creator-card"><h2>Edit Host</h2><div class="creator-form"><label for="host_name">Host Name<input id="host_name" maxlength="60" value="'+esc(host.name)+'"></label><label for="host_hair">Hair Color'+options('hair',['Copper Red','Bright Red','Auburn','Dark Brown','Blonde','Black'],host.hair)+'</label><label for="host_style">Hair Style'+options('style',['Long Waves','Straight','Ponytail','Bob','Curly'],host.style)+'</label><label for="host_glasses">Glasses'+options('glasses',CREATOR_GLASSES,host.glasses)+'</label><label for="host_braces">Braces'+options('braces',['Visible Silver','Orange Bands','Clear Brackets','No Braces'],host.braces)+'</label><label for="host_outfit">Outfit'+options('outfit',['Black Blazer / Orange Shirt','Orange Jacket / Black Shirt','White Blazer / Black Shirt','Black Evening Dress','Orange Evening Dress'],host.outfit)+'</label></div><div class="btnrow"><button class="primary" id="saveHost">Save Host</button><button id="resetHost">Restore Original Arianna</button></div></section></div></div>');
 }
 function create(){
- const cards=hunterProfiles.map((p,i)=>'<div class="hunter-profile '+(i===5?'leader-profile':'')+'"><div class="hunter-title">'+esc(p.title)+'</div><strong>'+esc(p.name)+'</strong><small>'+esc(p.theme)+' · '+esc(p.show)+'</small><span class="muted">'+esc(p.music)+'</span></div>').join('');
+ const cards=hunterProfiles.map((p,i)=>'<div class="hunter-profile '+(i===5?'leader-profile':'')+'"><div class="hunter-title">'+esc(p.title)+'</div><strong>'+esc(p.name)+'</strong><small>'+esc(p.theme)+' · '+esc(p.show)+'</small><span class="muted">'+esc(p.personality||p.music)+'</span></div>').join('');
  shell('<p class="eyebrow">Creation tools · Alpha</p><h1>Create Studio</h1><h2>Official Hunters</h2><p class="sub">Six confirmed Hunters. Eric is credited by first name only. The Raven is the Wolfpack leader. Abby Warren (The Warden) answers faster than the other Hunters.</p><div class="hunter-roster">'+cards+'</div><div class="grid"><div class="card"><h2>Hunter Entrance Music</h2><p>Scarlett\'s Fight Raiders Fight and Karli\'s Texas Fight are assigned to The Hunt only. No fight-song recordings are bundled. Use Music Importer to load tracks for this session. The Hunt plays imported Hunter themes at the Head-to-Head introduction.</p><p>El Jefe (Eric), The Jet (Justin), and The Raven use original planned themes.</p></div><div class="card"><h2>Question Creator</h2><p>Current questions: <b>'+questions.length+'</b></p><label>Question<input id="qtext" placeholder="Your trivia question"></label><label>Correct answer<input id="qanswer" placeholder="Correct answer"></label><label>Wrong answer 1<input id="wrong1"></label><label>Wrong answer 2<input id="wrong2"></label><label>Wrong answer 3<input id="wrong3"></label><button id="addQuestion">Add Question</button><div class="btnrow"><button id="exportQuestions">Export JSON</button><label class="pill">Import JSON<input type="file" id="importQuestions" accept="application/json,.json"></label></div><button id="resetQuestions">Reset Sample Questions</button></div></div><div class="card" style="margin-top:16px"><h2>Character & Show Studio</h2><div class="btnrow"><button data-go="host">Create a Host — Available</button><button data-go="contestants">Create a Contestant</button><button data-go="show">Create a Show</button><button data-go="music">Music Importer</button><button data-go="records">Records</button><button disabled>Create a Hunter Appearance — Coming Soon</button></div></div>');
 }
 function validQuestion(x){return x&&typeof x.q==='string'&&typeof x.a==='string'&&Array.isArray(x.opts)&&x.opts.length===4&&x.opts.every(y=>typeof y==='string')&&x.opts.includes(x.a)}
