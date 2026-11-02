@@ -1078,6 +1078,7 @@ func _builder_intro() -> void:
   countdown.start()
  )
  _button("MAIN MENU",_main_menu)
+ _show_dialogue("Arianna Dawson",["Welcome to The Hunt!" if mode=="hunt" else "Welcome to Beat the Wolfpack!","Let's build that prize fund.","Press START CASH BUILDER when you're ready."])
 
 func _question() -> Array:
  var q: Array=QUESTIONS[question_index%QUESTIONS.size()]
@@ -1088,19 +1089,15 @@ var active_question: Array=[]
 func _question_screen() -> void:
  _clear_ui()
  _update_3d_screens()
- _heading("CASH BUILDER" if phase=="builder" else "THE HUNT")
  _scoreboard()
  active_question=_question()
- var q_label:=_label(active_question[0],true)
- q_label.add_theme_color_override("font_color",Color("#fff0dc"))
- for i in range(4):
-  var choice:=i
-  _button(active_question[1][i],func() -> void: _respond(choice))
+ _show_broadcast_question(active_question,func(choice: int) -> void: _respond(choice))
 
 func _respond(choice: int) -> void:
  if phase!="builder":
   return
  var correct: bool=choice==int(active_question[2])
+ _reveal_answer(choice,correct)
  answer_number+=1
  if correct:
   studio_burst=1.0
@@ -1155,6 +1152,7 @@ func _begin_hunter_intro() -> void:
  _scoreboard()
  _walk_out(current_hunter)
  _button("CONTINUE TO HUNTER OFFERS",_show_offers)
+ _show_dialogue("Arianna Dawson",["You're in their territory now!","Here comes "+current_hunter+"."])
 
 func _walk_out(hunter: String) -> void:
  # Instantiate the active Hunter rather than reusing Karli-Rae's placeholder.
@@ -1223,7 +1221,7 @@ func _hunter_sits_and_speaks() -> void:
     glasses_gesture.tween_property(arm,"position:y",1.34,0.5)
  elif current_hunter=="The Girl Genius":
   message+="  (Jenny Kay smiles, braces visible.)"
- _label(message)
+ _show_dialogue(current_hunter,[str(LINES.get(current_hunter,"Ready to play?")),"Let's see whether you can outrun the pack."])
 
 func _show_offers() -> void:
  countdown.stop()
@@ -1273,11 +1271,9 @@ func _h2h_question() -> void:
  _label("Contestant step %d/6 · Hunter step %d/6" % [player_steps,hunter_steps])
  _label("At stake: $"+_money(offered_money))
  active_question=_question()
- _label(active_question[0],true)
- for i in range(4):
-  var selected:=i
-  _button(active_question[1][i],func() -> void:
+ _show_broadcast_question(active_question,func(selected: int) -> void:
    var correct: bool=selected==int(active_question[2])
+   _reveal_answer(selected,correct)
    if correct:
     studio_burst=1.0
     player_steps+=1
@@ -1291,7 +1287,7 @@ func _h2h_question() -> void:
     if hunter_steps>=player_steps-1:
      message=SLOGANS.pressure
     _h2h_question()
-  )
+ )
 
 func _end_head_to_head(won: bool) -> void:
  if warning_light != null:
@@ -1326,6 +1322,7 @@ func _raven_offer() -> void:
   team_money*=2
   _final_team()
  )
+ _show_dialogue("The Raven",["You survived the Hunters.","Now face the Raven.","Double or nothing?"])
 
 func _final_team() -> void:
  phase="final_team"
@@ -1348,10 +1345,7 @@ func _final_question() -> void:
  _label("Team: %d  ·  Raven: %d" % [final_score,raven_score])
  _scoreboard()
  active_question=_question()
- _label(active_question[0],true)
- for i in range(4):
-  var selected:=i
-  _button(active_question[1][i],func() -> void:
+ _show_broadcast_question(active_question,func(selected: int) -> void:
    if phase=="final_team":
     if selected==int(active_question[2]):
      final_score+=1
@@ -1362,7 +1356,7 @@ func _final_question() -> void:
      _show_result(false)
      return
    _final_question()
-  )
+ )
 
 func _final_raven() -> void:
  phase="final_raven"
@@ -1415,10 +1409,7 @@ func _btw_duel() -> void:
  _scoreboard()
  _label("Your time: "+_clock_string(ceili(time_remaining))+" · Hunters: "+_clock_string(ceili(btw_clock)))
  active_question=_question()
- _label(active_question[0],true)
- for i in range(4):
-  var selected:=i
-  _button(active_question[1][i],func() -> void:
+ _show_broadcast_question(active_question,func(selected: int) -> void:
    if selected==int(active_question[2]):
     btw_clock=maxf(0.0,btw_clock-5.0)
     if btw_clock<=0:
@@ -1430,7 +1421,7 @@ func _btw_duel() -> void:
     _show_result(false)
    else:
     _btw_duel()
-  )
+ )
 
 func _show_result(won: bool) -> void:
  countdown.stop()
@@ -1441,3 +1432,4 @@ func _show_result(won: bool) -> void:
  _heading(message)
  _label("Prize awarded: $"+_money(team_money if won else 0))
  _button("PLAY AGAIN",_main_menu)
+ _show_dialogue("Arianna Dawson",["Congratulations!" if won else "The Wolfpack takes this one.","That's the end of the Hunt."])
