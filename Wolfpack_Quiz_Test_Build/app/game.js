@@ -265,6 +265,7 @@ function draw(){
   window.wolfStage.render(s.mode==='btw'?'btw':'hunt');
   if(window.wolfStage.setProfessorPortrait)window.wolfStage.setProfessorPortrait(localStorage.getItem('wolf_professor_photo'));
   window.wolfStage.updateDen(s.q?.q,s.lastCorrect);
+  if(window.wolfStage.setActiveContestant)window.wolfStage.setActiveContestant(contestants[s.round]?.name||'Contestant',s.mode==='hunt'&&['qualIntro','offers','qual'].includes(s.phase));
   if(window.wolfStage.updateTeamPrize)window.wolfStage.updateTeamPrize(s.money,s.phase==='builder'?'TEAM PRIZE · CASH BUILDER':'TEAM PRIZE',s.roundMoney);
   if(window.wolfStage.setWardenMode)window.wolfStage.setWardenMode(s.phase==='qualIntro'&&selectedHunter(s.round)==='The Warden');
   if(window.wolfStage.playIntroductions){
