@@ -565,8 +565,8 @@ func _build_lair_bridge() -> void:
   Vector3(8.55,1.0,-9.0),
   Vector3(7.9,0.72,-6.4),
   Vector3(6.3,0.40,-4.65),
-  Vector3(3.55,0.0,-3.48),
-  Vector3(0.0,0.0,-3.45)
+  Vector3(3.55,0.36,-5.05),
+  Vector3(0.0,0.75,-5.45)
  ]
  _box(studio,Vector3(5.8,1.25,4.25),Vector3(8.55,0.44,-11.3),Color("#28212b"))
  _box(studio,Vector3(5.9,0.13,4.35),Vector3(8.55,1.13,-11.3),ORANGE,true)
@@ -580,37 +580,56 @@ func _build_lair_bridge() -> void:
   _box(studio,Vector3(0.13,1.6,0.17),Vector3(x,2.1,-11.4),RED,true)
 
 func _build_hunt_table() -> void:
- # Table rises toward the Hunter; only the playing surface tilts, keeping
- # the cash fascia and rear broadcast displays upright and readable.
- _box(studio,Vector3(8.65,0.35,4.55),Vector3(0,0.62,-0.20),DARK)
- _box(studio,Vector3(8.2,0.85,4.22),Vector3(0,1.05,-0.20),BLUE)
+ # Chase-style show geometry adapted for The Hunt: long, narrow, seven-zone
+ # inclined playing surface, separate four-person contestant stations and a
+ # raised Hunter dais. Distinct Wolfpack scarlet / warm-gold lighting.
+ _box(studio,Vector3(6.7,1.28,3.6),Vector3(0,0.54,-5.35),Color("#272133"))
+ _box(studio,Vector3(6.92,0.15,3.85),Vector3(0,1.24,-5.35),ORANGE,true)
+ _box(studio,Vector3(5.2,0.32,1.3),Vector3(0,1.53,-4.7),RED,true)
+ _text(studio,"HUNTER POSITION",Vector3(0,1.56,-4.0),43,0.004,WHITE)
+ _seat(Vector3(0,0.75,-5.45))
+ # A narrow wedge visually grows taller toward the raised Hunter dais.
+ _box(studio,Vector3(4.34,0.83,7.15),Vector3(0,0.69,-0.07),BLUE)
  tilt_table=Node3D.new()
  tilt_table.name="SlopedChaseTable"
- tilt_table.position=Vector3(0,1.55,-0.2)
+ tilt_table.position=Vector3(0,1.41,-0.12)
  tilt_table.rotation_degrees.x=-9.0
  studio.add_child(tilt_table)
- _box(tilt_table,Vector3(8.96,0.23,4.78),Vector3.ZERO,Color("#a2b0ba"))
- _box(tilt_table,Vector3(8.96,0.065,4.8),Vector3(0,0.15,0),Color("#172431"))
- for x in [-4.4,4.4]:
-  _box(tilt_table,Vector3(0.10,0.20,4.79),Vector3(x,0.23,0),ORANGE,true)
+ _box(tilt_table,Vector3(4.52,0.21,7.55),Vector3.ZERO,Color("#8c9bac"))
+ _box(tilt_table,Vector3(4.55,0.06,7.56),Vector3(0,0.14,0),Color("#1a2231"))
+ for x in [-2.24,2.24]:
+  _box(tilt_table,Vector3(0.115,0.19,7.56),Vector3(x,0.24,0),ORANGE,true)
  for i in range(7):
-  var row_z:float=-1.80+float(i)*0.55
-  _box(tilt_table,Vector3(6.45,0.04,0.47),Vector3(0,0.21,row_z),RED if i%2==0 else BLUE,true)
-  var marker:=_text(tilt_table,str(i+1),Vector3(-3.0,0.39,row_z),30,0.004,WHITE)
+  var row_z:float=-3.05+float(i)*1.02
+  _box(tilt_table,Vector3(4.04,0.045,0.86),Vector3(0,0.22,row_z),RED if i%2==0 else Color("#893728"),true)
+  var marker:=_text(tilt_table,str(i+1),Vector3(-1.65,0.40,row_z),42,0.004,WHITE)
   board_marks.append(marker)
- for x in [-3.4,-2.4,2.4,3.4]:
-  _box(studio,Vector3(0.085,0.72,0.15),Vector3(x,0.94,2.20),RED,true)
- _box(studio,Vector3(8.35,1.0,0.12),Vector3(0,1.04,2.18),DARK)
- _box(studio,Vector3(8.45,0.09,0.19),Vector3(0,1.55,2.22),ORANGE,true)
- _box(studio,Vector3(8.45,0.09,0.19),Vector3(0,0.51,2.22),RED,true)
- table_prize=_text(studio,"TEAM PRIZE   $0",Vector3(0,1.08,2.36),72,0.007,WHITE)
- _box(studio,Vector3(9.2,1.65,0.18),Vector3(0,3.0,-7.3),DARK)
- prize_label=_text(studio,"TEAM PRIZE   $0",Vector3(0,3.0,-7.12),70,0.008,WHITE)
- _box(studio,Vector3(4.35,1.85,0.22),Vector3(-6.1,2.25,3.2),DARK)
- _box(studio,Vector3(4.35,0.13,0.28),Vector3(-6.1,3.2,3.2),RED,true)
- stage_clock=_text(studio,"02:00",Vector3(-6.1,2.22,3.37),117,0.009,WHITE)
- _seat(Vector3(0,0,3.05))
- _seat(Vector3(0,0,-3.25))
+ # Chase-style four contestant stations, visible behind the table's low end.
+ for i in range(4):
+  var x:float=(float(i)-1.5)*2.55
+  _box(studio,Vector3(2.1,1.1,1.1),Vector3(x,0.75,5.35),Color("#34212e"))
+  _box(studio,Vector3(2.16,0.14,1.24),Vector3(x,1.37,5.35),RED,true)
+  _box(studio,Vector3(1.9,0.11,0.15),Vector3(x,0.91,5.95),ORANGE,true)
+  _text(studio,"PLAYER %d" % [i+1],Vector3(x,0.88,6.04),35,0.0036,WHITE)
+ # Independent, readable scoreboards and visible front fascias stay vertical.
+ _box(studio,Vector3(6.6,1.2,0.22),Vector3(0,1.0,3.83),DARK)
+ _box(studio,Vector3(6.72,0.11,0.25),Vector3(0,1.59,3.86),ORANGE,true)
+ table_prize=_text(studio,"TEAM PRIZE   $0",Vector3(0,1.05,3.98),69,0.0062,WHITE)
+ _box(studio,Vector3(8.5,1.9,0.3),Vector3(0,4.3,-13.9),DARK)
+ _box(studio,Vector3(8.62,0.11,0.36),Vector3(0,5.27,-13.9),RED,true)
+ _box(studio,Vector3(8.62,0.11,0.36),Vector3(0,3.33,-13.9),ORANGE,true)
+ prize_label=_text(studio,"TEAM PRIZE   $0",Vector3(0,4.32,-13.66),75,0.0076,WHITE)
+ _box(studio,Vector3(3.75,1.7,0.18),Vector3(-6.5,2.75,4.15),DARK)
+ _box(studio,Vector3(3.84,0.12,0.22),Vector3(-6.5,3.64,4.15),RED,true)
+ stage_clock=_text(studio,"02:00",Vector3(-6.5,2.75,4.35),111,0.0079,WHITE)
+ # Separate rear and side LED geometry mirroring the Chase studio's depth.
+ for i in range(13):
+  var x:float=(float(i)-6.0)*1.82
+  _box(studio,Vector3(0.16,6.2,0.16),Vector3(x,3.0,-13.84),RED if i%2==0 else ORANGE,true)
+ for side in [-1.0,1.0]:
+  _box(studio,Vector3(0.48,5.1,12.6),Vector3(side*11.35,2.45,-1.15),Color("#211e31"))
+  for j in range(7):
+   _box(studio,Vector3(0.20,0.12,0.8),Vector3(side*11.03,0.7+float(j)*0.67,-6.2+float(j)*1.54),ORANGE if j%2==0 else RED,true)
 
 func _seat(position: Vector3) -> void:
  _box(studio,Vector3(0.95,0.23,0.92),position+Vector3(0,0.68,0),DARK)
@@ -975,7 +994,7 @@ func _walk_out(hunter: String) -> void:
  hunter_avatar=_featured_hunter(hunter)
  hunter_avatar.visible=true
  hunter_avatar.position=entrance_waypoints[0] if mode=="hunt" and entrance_waypoints.size()>0 else Vector3(7.7,0,-6.8)
- hunter_target=Vector3(0,0,-3.45)
+ hunter_target=Vector3(0,0.75,-5.45)
  walking=true
  walk_elapsed=0.0
  _set_hunter_presentation(hunter)
