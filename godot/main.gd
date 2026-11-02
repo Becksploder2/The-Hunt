@@ -280,6 +280,25 @@ func _featured_hunter(name: String) -> Node3D:
   _text(model,"RAVEN",Vector3(0,1.34,0.25),30,0.003,ORANGE)
  return model
 
+func _featured_contestant(index: int) -> Node3D:
+ var look: Dictionary=contestant_styles[clampi(index,0,contestant_styles.size()-1)]
+ var jackets: Dictionary={"Purple":Color("#693b85"),"Red":Color("#a92839"),"Blue":Color("#31569b"),"Green":Color("#257957"),"Gold":Color("#be9e4c"),"Black":Color("#252531")}
+ var skins: Dictionary={"Light":Color("#efc7a7"),"Medium":Color("#d9a17b"),"Tan":Color("#b77b55"),"Dark":Color("#7b4d38")}
+ var hairs: Dictionary={"Brown":Color("#5a3b2d"),"Black":Color("#27222a"),"Blonde":Color("#e6c271"),"Red":Color("#b24a38"),"Gray":Color("#999aa6")}
+ var coat: Color=jackets.get(str(look.get("outfit","Red")),RED)
+ var complexion: Color=skins.get(str(look.get("skin","Medium")),SKIN)
+ var hair: Color=hairs.get(str(look.get("hair","Brown")),Color("#5a3b2d"))
+ var has_glasses: bool=str(look.get("glasses","No"))=="Yes"
+ var has_braces: bool=str(look.get("braces","No"))=="Yes"
+ var model:=_avatar(studio,coat,complexion,has_glasses,has_braces)
+ if str(look.get("hairStyle","Short"))!="Bald":
+  _box(model,Vector3(0.57,0.17,0.41),Vector3(0,2.51,0),hair)
+  if str(look.get("hairStyle","Short"))=="Long":
+   for x in [-0.23,0.23]:
+    _box(model,Vector3(0.18,0.46,0.36),Vector3(x,2.19,-0.05),hair)
+ model.scale.y=clampf(float(look.get("height_inches",66))/66.0,0.84,1.18)
+ return model
+
 func _rebuild_studio() -> void:
  board_marks.clear()
  if studio != null:
@@ -800,6 +819,11 @@ func _show_offers() -> void:
   )
 
 func _head_to_head() -> void:
+ if contestant_avatar != null and is_instance_valid(contestant_avatar):
+  contestant_avatar.queue_free()
+ contestant_avatar=_featured_contestant(contestant_index)
+ contestant_avatar.position=Vector3(0,0,4.0)
+ contestant_avatar.rotation.y=PI
  contestant_avatar.visible=true
  camera.position=Vector3(0,7.4,13.8)
  camera.look_at(Vector3(0,1.3,-1.0))
