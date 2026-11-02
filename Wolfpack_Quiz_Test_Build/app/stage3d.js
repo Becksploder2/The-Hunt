@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 const orange=0xff7900, black=0x090909;
 let wardenMode=false,wardenSign=null,wardenLight=null;
-let ledSurface=null,ledCtx=null,ledTexture=null,ledTimeline=null,ledPanel=null;
+let ledSurface=null,ledCtx=null,ledTexture=null,ledTimeline=null,ledPanel=null,introCam=null,cameraBeforeIntro=null;
 let scene,camera,renderer,container,current='stage',mode='',animation,denCam,stageCam,closeCam,entranceCam,denDisplay,denReaction='WATCHING',denQuestion='LIVE QUESTION',denHunters=[];
 const makeMat=(color,emissive=0)=>new THREE.MeshStandardMaterial({color,roughness:.42,metalness:.28,emissive,emissiveIntensity:.23});
 const mDark=makeMat(0x111111),mMetal=makeMat(0x414141),mOrange=makeMat(orange,0x552200),mWhite=makeMat(0xffffff);
@@ -284,8 +284,10 @@ function playIntroductions(names){
  if(!roster.length||!ledPanel)return;
  ledTimeline={names:roster,start:performance.now(),secondsPer:4.1};
  ledPanel.visible=true;
+ if(!cameraBeforeIntro)cameraBeforeIntro=camera;
+ if(introCam)camera=introCam;
 }
-function stopIntroductions(){ledTimeline=null;if(ledPanel)ledPanel.visible=false;}
+function stopIntroductions(){ledTimeline=null;if(ledPanel)ledPanel.visible=false;if(cameraBeforeIntro){camera=cameraBeforeIntro;cameraBeforeIntro=null;}}
 function updateIntroductions(now){
  if(!ledTimeline||!ledPanel)return;
  const elapsed=(now-ledTimeline.start)/1000;
@@ -318,10 +320,11 @@ function render(modeValue='hunt',view='stage'){
  denCam.position.set(30,3.5,9);denCam.lookAt(30,2,-1);
  closeCam=new THREE.PerspectiveCamera(55,stageCam.aspect,.1,100);closeCam.position.set(4,3.6,5);closeCam.lookAt(0,1.5,-2);
  entranceCam=new THREE.PerspectiveCamera(55,stageCam.aspect,.1,100);entranceCam.position.set(-6.8,2.3,4);entranceCam.lookAt(-7.2,2,-7);
+ introCam=new THREE.PerspectiveCamera(47,stageCam.aspect,.1,100);introCam.position.set(0,5.9,5.8);introCam.lookAt(0,1.35,-.4);
  setView(view);
  const animate=()=>{if(!renderer||!scene)return;animation=requestAnimationFrame(animate);updateIntroductions(performance.now());renderer.render(scene,camera)};
  animate();
 }
-function setView(view){current=['den','close','entrance'].includes(view)?view:'stage';camera=current==='den'?denCam:current==='close'?closeCam:current==='entrance'?entranceCam:stageCam;}
-function destroy(){if(animation)cancelAnimationFrame(animation);animation=null;if(renderer){renderer.dispose();if(renderer.domElement?.parentNode)renderer.domElement.parentNode.removeChild(renderer.domElement);}renderer=null;container=null;scene=null;camera=null;wardenSign=null;wardenLight=null;ledPanel=null;ledTimeline=null;ledCtx=null;if(ledTexture)ledTexture.dispose();ledTexture=null;ledSurface=null;}
+function setView(view){current=['den','close','entrance'].includes(view)?view:'stage';const selected=current==='den'?denCam:current==='close'?closeCam:current==='entrance'?entranceCam:stageCam;if(ledTimeline)cameraBeforeIntro=selected;else camera=selected;}
+function destroy(){if(animation)cancelAnimationFrame(animation);animation=null;if(renderer){renderer.dispose();if(renderer.domElement?.parentNode)renderer.domElement.parentNode.removeChild(renderer.domElement);}renderer=null;container=null;scene=null;camera=null;wardenSign=null;wardenLight=null;ledPanel=null;ledTimeline=null;ledCtx=null;if(ledTexture)ledTexture.dispose();ledTexture=null;ledSurface=null;introCam=null;cameraBeforeIntro=null;}
 window.wolfStage={render,setView,destroy,updateDen,setWardenMode,playIntroductions,stopIntroductions};
