@@ -704,39 +704,63 @@ func _begin_hunter_intro() -> void:
  _button("CONTINUE TO HUNTER OFFERS",_show_offers)
 
 func _walk_out(hunter: String) -> void:
+ # Instantiate the active Hunter rather than reusing Karli-Rae's placeholder.
+ if hunter_avatar != null and is_instance_valid(hunter_avatar):
+  hunter_avatar.queue_free()
+ hunter_avatar=_featured_hunter(hunter)
  hunter_avatar.visible=true
  hunter_avatar.position=Vector3(7.7,0,-6.8)
- hunter_target=Vector3(0,0,-3.4)
+ hunter_target=Vector3(0,0,-3.45)
  walking=true
- walk_elapsed=0
+ walk_elapsed=0.0
+ entrance_banner.text=hunter.to_upper() if entrance_banner != null else "HUNTER"
+ if entrance_light != null:
+  entrance_light.light_energy=8.0
+ camera.position=Vector3(9.0,3.4,1.2)
+ camera.look_at(Vector3(7.7,2.0,-6.1))
  music_director.play_entrance(hunter,mode)
- _text(studio,hunter.to_upper(),Vector3(0,4.0,-3.8),67,0.006,ORANGE)
+ _text(studio,hunter.to_upper(),Vector3(0,4.1,-3.8),60,0.006,ORANGE)
 
 func _process(delta: float) -> void:
  if walking and hunter_avatar != null and is_instance_valid(hunter_avatar):
   walk_elapsed+=delta
-  var alpha:=clampf(walk_elapsed/3.0,0.0,1.0)
-  hunter_avatar.position=Vector3(7.7,0,-6.8).lerp(hunter_target,alpha)
-  hunter_avatar.rotation.y=sin(walk_elapsed*10.0)*0.1*(1.0-alpha)
+  var alpha:=clampf(walk_elapsed/4.1,0.0,1.0)
+  var ease:=alpha*alpha*(3.0-2.0*alpha)
+  hunter_avatar.position=Vector3(7.7,0,-6.8).lerp(hunter_target,ease)
+  hunter_avatar.rotation.y=sin(walk_elapsed*9.0)*0.065*(1.0-alpha)
+  camera.position=Vector3(9.0,3.4,1.2).lerp(Vector3(5.8,3.6,5.8),ease)
+  camera.look_at(hunter_avatar.position+Vector3(0,1.9,0))
+  if entrance_light != null:
+   entrance_light.light_energy=5.0+sin(walk_elapsed*7.0)*2.0
   if alpha>=1.0:
    walking=false
    hunter_avatar.position=hunter_target
    _hunter_sits_and_speaks()
 
 func _hunter_sits_and_speaks() -> void:
- # First-pass seated pose, to be replaced with rigged animation.
- hunter_avatar.position.y=-0.42
+ # Camera holds the dialogue shot as the Hunter settles into the chair.
+ var seat_motion:=create_tween()
+ seat_motion.tween_property(hunter_avatar,"position:y",-0.42,0.48).set_trans(Tween.TRANS_SINE)
+ seat_motion.parallel().tween_property(hunter_avatar,"scale:y",0.82,0.48)
+ var shot:=create_tween()
+ shot.tween_property(camera,"position",Vector3(4.6,3.05,2.3),0.75)
  message=("%s: %s" % [current_hunter,LINES.get(current_hunter,"Ready to play?")])
  if current_hunter=="The Professor":
-  message+="  (Karli-Rae Gomez adjusts her reading glasses.)"
+  message+="  (Karli-Rae adjusts her reading glasses.)"
+  # A small arm/hand gesture points to her frames during the line.
+  if hunter_avatar.get_child_count()>3:
+   var arm: Node3D=hunter_avatar.get_child(3) as Node3D
+   if arm != null:
+    var glasses_gesture:=create_tween()
+    glasses_gesture.tween_property(arm,"position:y",1.85,0.3)
+    glasses_gesture.tween_property(arm,"position:y",1.34,0.5)
  elif current_hunter=="The Girl Genius":
-  message+="  (Jenny Kay grins, braces visible.)"
- if status_label != null and is_instance_valid(status_label):
-  status_label.text=message
- else:
-  _label(message)
+  message+="  (Jenny Kay smiles, braces visible.)"
+ _label(message)
 
 func _show_offers() -> void:
+ camera.position=Vector3(0,7.4,13.8)
+ camera.look_at(Vector3(0,1.3,-1.0))
  phase="offers"
  music_director.stop_entrance()
  _clear_ui()
@@ -756,6 +780,8 @@ func _show_offers() -> void:
 
 func _head_to_head() -> void:
  contestant_avatar.visible=true
+ camera.position=Vector3(0,7.4,13.8)
+ camera.look_at(Vector3(0,1.3,-1.0))
  phase="head_to_head"
  _clear_ui()
  message=SLOGANS.offers
