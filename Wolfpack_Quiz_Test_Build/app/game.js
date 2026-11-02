@@ -69,8 +69,29 @@ function stop(){if(tick)clearInterval(tick);tick=null}
 function shell(html){app.innerHTML=`<header><b>🐺 <span class="logo">WOLFPACK</span> QUIZ GAMES</b><nav class="topnav"><button data-go="home">Home</button><button data-go="create">Create Studio</button><button data-go="host">Create a Host</button><button data-go="contestants">Contestants</button><button data-go="music">Music</button><button data-go="records">Records</button><button data-go="credits">Credits</button><button id="toggleAudio">🔊 Music / SFX</button><button data-go="about">About</button></nav></header><main>${html}</main>`}
 function go(s){stop();stopImportedMusic();if(window.wolfStage)window.wolfStage.destroy();if(window.wolfAudio)window.wolfAudio.stop();screen=s;session=null;render()}
 function render(){if(screen==='host')return hostEditor();if(screen==='contestants')return contestantEditor();if(screen==='show')return showEditor();if(screen==='music')return musicEditor();if(screen==='records')return recordScreen();if(screen==='credits')return creditsScreen();if(screen==='home')return home();if(screen==='create')return create();if(screen==='about')return shell('<p class="eyebrow">Wolfpack Studios · Alpha 0.1</p><h1>About this prototype</h1><div class="card">Original game-show test mechanics, placeholder Hunter names, and a local question editor. The Raven is the exclusive Face the Raven finale opponent in The Hunt and one of six Hunters in Beat the Wolfpack. All progress is saved locally on this computer. This build has original synthesized sound cues and prototype music, but no recorded soundtrack, character models, voice acting, cinematic entrances, or finished 3D sets yet.</div>');if(screen==='play')return draw()}
-function home(){shell(`<p class="eyebrow">Wolfpack Studios · First playable prototype</p><h1>Choose your show.</h1><p class="sub">Hosted by ${esc(host.name)}. Two original trivia competitions and seven Wolfpack Hunters.</p><div class="grid"><section class="card gold"><span class="pill">TEAM COMPETITION</span><h2>THE HUNT</h2><p>Four contestants build their prize fund and face individual Hunters. Survivors advance to <b>Face the Raven</b>.</p><button class="primary" data-start="hunt">Play The Hunt</button></section><section class="card red"><span class="pill">SOLO COMPETITION</span><h2>BEAT THE WOLFPACK</h2><p>Build a prize, select your opposition, and outlast the Hunters in a timed quiz battle.</p><button class="primary" data-start="btw">Play Beat the Wolfpack</button></section><section class="card"><span class="pill">CAREER CHALLENGE</span><h2>WOLFPACK TRIALS</h2><p>Four contestants face four separate Hunters. The survivors must defeat The Raven to unlock Become a Hunter.</p><button data-start="trials">Begin Trials</button></section><section class="card ${unlocked?'gold':'lock'}"><span class="pill">${unlocked?'UNLOCKED':'LOCKED'}</span><h2>BECOME A HUNTER</h2><p>${unlocked?'Play from the Hunter side and stop the contestants.':'Defeat The Raven in the Wolfpack Trials to unlock.'}</p><button data-start="hunter" ${unlocked?'':'disabled'}>${unlocked?'Play as a Hunter':'🔒 Locked'}</button></section></div>`)}
+function home(){shell(`<p class="eyebrow">Wolfpack Studios · First playable prototype</p><h1>Choose your show.</h1><p class="sub">Hosted by ${esc(host.name)}. Two original trivia competitions and seven Wolfpack Hunters.</p><div class="grid"><section class="card gold"><span class="pill">TEAM COMPETITION</span><h2>THE HUNT</h2><p class="show-motto">The Hunt Starts Here!</p><p>Four contestants build their prize fund and face individual Hunters. Survivors advance to <b>Face the Raven</b>.</p><button class="primary" data-start="hunt">Play The Hunt</button></section><section class="card red"><span class="pill">SOLO COMPETITION</span><h2>BEAT THE WOLFPACK</h2><p class="show-motto">Time to Face the Pack!</p><p>Build a prize, select your opposition, and outlast the Hunters in a timed quiz battle.</p><button class="primary" data-start="btw">Play Beat the Wolfpack</button></section><section class="card"><span class="pill">CAREER CHALLENGE</span><h2>WOLFPACK TRIALS</h2><p>Four contestants face four separate Hunters. The survivors must defeat The Raven to unlock Become a Hunter.</p><button data-start="trials">Begin Trials</button></section><section class="card ${unlocked?'gold':'lock'}"><span class="pill">${unlocked?'UNLOCKED':'LOCKED'}</span><h2>BECOME A HUNTER</h2><p>${unlocked?'Play from the Hunter side and stop the contestants.':'Defeat The Raven in the Wolfpack Trials to unlock.'}</p><button data-start="hunter" ${unlocked?'':'disabled'}>${unlocked?'Play as a Hunter':'🔒 Locked'}</button></section></div>`)}
 
+const HUNT_SLOGANS=Object.freeze({
+ opening:'Let the Hunt Begin!',
+ begin:'The Hunt Starts Here!',
+ entrance:"You're in Their Territory Now!",
+ danger:'The Pack Is Closing In!',
+ choice:'Run With the Pack… or Fall Behind!',
+ wolfpack:'Time to Face the Pack!',
+ raven:'The Raven Awaits!',
+ finale:"There's Nowhere Left to Hide!"
+});
+function sloganForPhase(s){
+ if(s.phase==='builderIntro')return s.mode==='btw'?HUNT_SLOGANS.wolfpack:HUNT_SLOGANS.opening;
+ if(s.phase==='builder')return HUNT_SLOGANS.begin;
+ if(s.phase==='qualIntro')return HUNT_SLOGANS.entrance;
+ if(s.phase==='offers')return HUNT_SLOGANS.choice;
+ if(s.phase==='qual')return s.hunterStep>=s.playerStep-1?HUNT_SLOGANS.danger:HUNT_SLOGANS.choice;
+ if(s.phase==='choice'||s.phase==='duel')return HUNT_SLOGANS.wolfpack;
+ if(s.phase==='bonusOffer')return HUNT_SLOGANS.raven;
+ if(['final','finalHunter','pushback'].includes(s.phase))return HUNT_SLOGANS.finale;
+ return HUNT_SLOGANS.begin;
+}
 function start(mode){
  stop();stopImportedMusic();
  session={mode,phase:mode==='hunter'?'hunter':'builderIntro',round:0,qi:Math.floor(Math.random()*questions.length),
@@ -84,34 +105,34 @@ function advance(){
  stop();const s=session;if(!s)return;s.answered=false;s.lastCorrect=null;s.q=nextQ();
  if(s.phase==='builderIntro'){
   s.builderCount=0;s.roundMoney=0;s.score=0;s.clock=s.mode==='hunt'?120:showConfig.builderSeconds;
-  s.log=s.mode==='btw'?'One contestant. Your first wrong answer ends the episode; later misses end the Cash Builder.':'Contestant '+(s.round+1)+' — earn money in the Cash Builder before meeting a Hunter.';
+  s.log=s.mode==='btw'?HUNT_SLOGANS.wolfpack+' One contestant. Your first wrong answer ends the episode; later misses end the Cash Builder.':HUNT_SLOGANS.opening+' Contestant '+(s.round+1)+' — earn money in the Cash Builder before meeting a Hunter.';
  }else if(s.phase==='builder'){
   s.clock=s.mode==='hunt'?120:showConfig.builderSeconds;s.builderCount=0;s.roundMoney=0;s.score=0;s.log=s.mode==='hunt'?'Ten questions or two minutes. $10,000 for every correct answer. Perfect 10/10 unlocks the Raven Super Offer and time bonus.':'Cash Builder: $1,000 for every correct answer.';
  }else if(s.phase==='qualIntro'){
-  s.log='Cash Builder complete: $'+s.roundMoney.toLocaleString()+'. '+selectedHunter(s.round)+' approaches the table. '+hunterLine(selectedHunter(s.round),'intro');
+  s.log=HUNT_SLOGANS.entrance+' Cash Builder complete: $'+s.roundMoney.toLocaleString()+'. '+selectedHunter(s.round)+' approaches the table. '+hunterLine(selectedHunter(s.round),'intro');
   playHunterTheme();
  }else if(s.phase==='offers'){
   let base=Math.max(1000,s.roundMoney),style=hunterOfferStyle(selectedHunter(s.round));
   s.offers=[{label:'LOW OFFER',money:Math.max(1000,Math.round(base*style.low/1000)*1000),step:1},
    {label:'MIDDLE OFFER',money:s.roundMoney,step:2},
    {label:'HIGH OFFER',money:Math.max(5000,Math.round(base*style.high/1000)*1000),step:3}];
-  s.log=selectedHunter(s.round)+' offers three positions on the board. High offer: more money, one fewer step from being caught. '+hunterLine(selectedHunter(s.round),'offer');
+  s.log=HUNT_SLOGANS.choice+' '+selectedHunter(s.round)+' offers three positions on the board. High offer: more money, one fewer step from being caught. '+hunterLine(selectedHunter(s.round),'offer');
  }else if(s.phase==='qual'){
   s.clock=0;s.score=0;s.opp=0;s.playerStep=s.offerStep||2;s.hunterStep=0;
   s.log=selectedHunter(s.round)+' vs '+contestants[s.round].name+'. Answer correctly to move your money down the board. The Hunter advances on correct answers.';
  }else if(s.phase==='bonusOffer'){
   s.originalFinalPot=s.money;s.doubleOrNothing=false;
-  s.log='The Raven challenges the team to Double or Nothing before the final chase.';
+  s.log=HUNT_SLOGANS.raven+' The Raven challenges the team to Double or Nothing before the final chase.';
  }else if(s.phase==='final'){
   s.finalStage='team';s.clock=120;s.oppclock=120;s.score=s.survivors;s.headStart=s.survivors;s.opp=0;s.pushbacks=0;s.turn='player';
-  s.log='FACE THE RAVEN — '+s.survivors+' survivor(s), '+s.headStart+' point head start. Team plays first for 120 seconds.';
+  s.log=HUNT_SLOGANS.finale+' FACE THE RAVEN — '+s.survivors+' survivor(s), '+s.headStart+' point head start. Team plays first for 120 seconds.';
  }else if(s.phase==='finalHunter'){
   s.finalStage='hunter';s.turn='hunter';s.oppclock=120;s.aiDelay=0;
   s.log='THE RAVEN CHASES — Target '+s.score+'. Each wrong answer gives the team a pushback opportunity.';
  }else if(s.phase==='pushback'){
   s.turn='player';s.log='PUSHBACK CHANCE! Answer correctly to push The Raven back one step.';
  }else if(s.phase==='choice'){
-  s.money=s.roundMoney;s.log='The LED table is introducing all seven Hunters. Choose how many Hunters to face. More Hunters offer more money and a tougher clock.';
+  s.money=s.roundMoney;s.log=HUNT_SLOGANS.wolfpack+' The LED table is introducing all seven Hunters. Choose how many Hunters to face. More Hunters offer more money and a tougher clock.';
  }else if(s.phase==='duel'){
   s.clock=60;s.oppclock=45+Math.max(0,7-s.opponents)*10;s.aiDelay=0;s.turn='player';s.score=0;s.opp=0;
   s.selectedHunters=selectWolfpackHunters(s.opponents);
@@ -294,7 +315,7 @@ function draw(){
  const isIntro=['builderIntro','qualIntro'].includes(s.phase);
  const choice=['choice','offers'].includes(s.phase);
  const timerText=s.phase==='builder'?'Cash Builder: '+s.clock+'s':'Contestant: '+s.clock+'s · Hunters: '+s.oppclock+'s';
- shell('<p class="eyebrow">'+heading+' · '+phase+'</p><h1>'+phase+'</h1><div class="status broadcast-scorebar"><span>Team prize: $'+s.money.toLocaleString()+'</span><span>Round money: $'+s.roundMoney.toLocaleString()+'</span><span>Correct: '+s.score+'</span><span>Hunter: '+s.opp+'</span><span>Qualified: '+s.survivors+'</span></div>'+broadcastBug(s)+'<div class="message metallic-message">'+esc(s.log)+'</div>'+setHtml(s)+gamePanel(s)+(isIntro?introHtml(s):s.phase==='choice'?choiceHtml(s):s.phase==='offers'||s.phase==='bonusOffer'?'':'<div class="question broadcast-question">'+esc(s.q.q)+'</div><div class="answers broadcast-answers">'+s.q.opts.map((a,i)=>'<button class="broadcast-answer" data-answer="'+i+'">'+esc(a)+'</button>').join('')+'</div>'));
+ shell('<p class="eyebrow">'+heading+' · '+phase+'</p><h1>'+phase+'</h1><div class="status broadcast-scorebar"><span>Team prize: $'+s.money.toLocaleString()+'</span><span>Round money: $'+s.roundMoney.toLocaleString()+'</span><span>Correct: '+s.score+'</span><span>Hunter: '+s.opp+'</span><span>Qualified: '+s.survivors+'</span></div>'+broadcastBug(s)+'<p class="hunt-show-slogan" aria-label="Wolfpack show catchphrase">'+esc(sloganForPhase(s))+'</p><div class="message metallic-message">'+esc(s.log)+'</div>'+setHtml(s)+gamePanel(s)+(isIntro?introHtml(s):s.phase==='choice'?choiceHtml(s):s.phase==='offers'||s.phase==='bonusOffer'?'':'<div class="question broadcast-question">'+esc(s.q.q)+'</div><div class="answers broadcast-answers">'+s.q.opts.map((a,i)=>'<button class="broadcast-answer" data-answer="'+i+'">'+esc(a)+'</button>').join('')+'</div>'));
  if(window.wolfStage){
   window.wolfStage.render(s.mode==='btw'?'btw':'hunt');
   if(window.wolfStage.setProfessorPortrait)window.wolfStage.setProfessorPortrait(localStorage.getItem('wolf_professor_photo'));
@@ -353,6 +374,7 @@ function answer(index){
   if(good)s.playerStep=Math.min(6,s.playerStep+1);
   else if(Math.random()<.75)s.hunterStep=Math.min(6,s.hunterStep+1);
   s.log=good?'Contestant advances toward home! '+hunterLine(selectedHunter(s.round),'wrong'):selectedHunter(s.round)+' takes a step closer. '+hunterLine(selectedHunter(s.round),'correct');
+  if(s.hunterStep>=s.playerStep-1&&s.hunterStep<s.playerStep)s.log=HUNT_SLOGANS.danger+' '+s.log;
   if(s.playerStep>=6){endQualifier(true);return}
   if(s.hunterStep>=s.playerStep){endQualifier(false);return}
   nextTurn();return;
