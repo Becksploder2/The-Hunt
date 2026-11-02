@@ -82,7 +82,7 @@ function advance(){
  }else if(s.phase==='pushback'){
   s.turn='player';s.log='PUSHBACK CHANCE! Answer correctly to push The Raven back one step.';
  }else if(s.phase==='choice'){
-  s.money=s.roundMoney;s.log='Choose how many Hunters to face. More Hunters offer more money and a tougher clock.';
+  s.money=s.roundMoney;s.log='The LED table is introducing all seven Hunters. Choose how many Hunters to face. More Hunters offer more money and a tougher clock.';
  }else if(s.phase==='duel'){
   s.clock=60;s.oppclock=45+Math.max(0,7-s.opponents)*10;s.aiDelay=0;s.turn='player';s.score=0;s.opp=0;
   s.selectedHunters=selectWolfpackHunters(s.opponents);
@@ -235,10 +235,18 @@ function draw(){
  const choice=['choice','offers'].includes(s.phase);
  const timerText=s.phase==='builder'?'Cash Builder: '+s.clock+'s':'Contestant: '+s.clock+'s · Hunters: '+s.oppclock+'s';
  shell('<p class="eyebrow">'+heading+' · '+phase+'</p><h1>'+phase+'</h1><div class="status broadcast-scorebar"><span>Team prize: $'+s.money.toLocaleString()+'</span><span>Round money: $'+s.roundMoney.toLocaleString()+'</span><span>Correct: '+s.score+'</span><span>Hunter: '+s.opp+'</span><span>Qualified: '+s.survivors+'</span><span id="timer" class="metal-timer">'+timerText+'</span></div><div class="message metallic-message">'+esc(s.log)+'</div>'+setHtml(s)+gamePanel(s)+(isIntro?introHtml(s):s.phase==='choice'?choiceHtml(s):s.phase==='offers'?'':'<div class="question broadcast-question">'+esc(s.q.q)+'</div><div class="answers broadcast-answers">'+s.q.opts.map((a,i)=>'<button class="broadcast-answer" data-answer="'+i+'">'+esc(a)+'</button>').join('')+'</div>'));
- if(window.wolfStage){window.wolfStage.render(s.mode==='btw'?'btw':'hunt');window.wolfStage.updateDen(s.q?.q,s.lastCorrect)}
+ if(window.wolfStage){
+  window.wolfStage.render(s.mode==='btw'?'btw':'hunt');
+  window.wolfStage.updateDen(s.q?.q,s.lastCorrect);
+  if(window.wolfStage.setWardenMode)window.wolfStage.setWardenMode(s.phase==='qualIntro'&&selectedHunter(s.round)==='The Warden');
+  if(window.wolfStage.playIntroductions){
+   if(s.phase==='qualIntro')window.wolfStage.playIntroductions([selectedHunter(s.round)]);
+   else if(s.phase==='choice')window.wolfStage.playIntroductions([...friends,'The Raven']);
+  }
+ }
 }
 
-function setHtml(s){return '<section class="three-scene"><div class="three-controls"><strong>FULL 3D STUDIO</strong><div><button data-camera="stage">Wide Stage</button><button data-camera="close">Podium Camera</button><button data-camera="entrance">Entrance Tunnel</button><button data-camera="den">Hunter\'s Den</button></div></div><div id="stage3d" class="stage3d" aria-label="Interactive 3D game show stage"></div><p class="muted">3D prototype: modeled stage, podiums, studio lighting, tunnel entrance and Hunter\'s Den. Characters and animation are still in development.</p></section>'}
+function setHtml(s){return '<section class="three-scene"><div class="three-controls"><strong>FULL 3D STUDIO + HUNTER LED INTRO</strong><div><button data-camera="stage">Wide Stage</button><button data-camera="close">Podium Camera</button><button data-camera="entrance">Entrance Tunnel</button><button data-camera="den">Hunter\'s Den</button></div></div><div id="stage3d" class="stage3d" aria-label="Interactive 3D game show stage"></div><p class="muted">3D prototype: modeled stage, podiums, studio lighting, tunnel entrance and Hunter\'s Den. Stylized 2D character animations on the in-world LED table; realistic 3D Hunter characters are still in development.</p></section>'}
 
 function introHtml(s){
  const first=s.phase==='builderIntro';
