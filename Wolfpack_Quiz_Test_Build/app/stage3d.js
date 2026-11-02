@@ -69,17 +69,47 @@ function verticalWallFrames(){for(const x of [-8.6,-6.6,6.6,8.6]){block(.22,5.6,
  for(let k=0;k<3;k++){beamFace(0,5.68-k*.55,-7.01,11.7-k*.65,.09,k===1?mOrange:mMetal)}}
 function seatDetail(x,y,z,angle=0){const group=new THREE.Group();group.position.set(x,y,z);group.rotation.y=angle;scene.add(group);block(.8,.14,.78,0,.48,0,mMetal,group);block(.82,.9,.15,0,.98,-.3,mDark,group);block(.14,.35,.8,-.46,.65,0,mOrange,group);block(.14,.35,.8,.46,.65,0,mOrange,group);cylinder(.13,.13,.55,0,.12,0,mMetal,group)}
 function floorChevron(x,z,flip=1){for(let i=0;i<4;i++){strip(x-1.35+i*.4,.07,z,x,.07,z+flip*.65,.04,mIce);strip(x,.07,z+flip*.65,x+1.35-i*.4,.07,z,.04,mIce)}}
+
+function buildChaseLedTable(compact=false){
+ const front=compact?1.15:3.45;
+ const rear=compact?-1.85:-4.15;
+ const center=(front+rear)/2,depth=front-rear;
+ const width=compact?3.65:3.85;
+ // Suspended, sloped-looking blue-metal frame with illuminated side rails.
+ block(width+.50,.27,depth+.42,0,.42,center,mDark);
+ block(width+.26,.65,depth+.20,0,.79,center,mBlue);
+ block(width+.20,.17,depth+.12,0,1.16,center,mMetal);
+ block(width+.12,.065,depth+.02,0,1.28,center,mIce);
+ for(const x of [-width/2,width/2]){
+  block(.12,.21,depth+.23,x,1.33,center,mOrange);
+  block(.065,.055,depth+.27,x,1.47,center,mIce);
+  for(let z=rear+.35;z<front;z+=1.05)block(.14,.18,.13,x,1.12,z,mGold);
+ }
+ // Seven independently legible display segments, like the tracked Hunt board.
+ const step=depth/7;
+ for(let k=0;k<7;k++){
+  const z=rear+(k+.5)*step;
+  block(width-.19,.075,step-.075,0,1.365,z,k%2?mBlue:mIce);
+  block(width-.10,.032,.06,0,1.418,rear+k*step,mOrange);
+ }
+ block(width+.4,.17,.22,0,.96,front+.11,mOrange);
+ block(width+.4,.17,.22,0,.96,rear-.11,mIce);
+ // Distinctive Wolfpack illuminated fascia, leaving the table surface visible.
+ textSurface(compact?'WOLFPACK SHOWDOWN':'THE HUNT  •  CHASE BOARD',0,.81,front+.235,width,.40);
+ for(const z of [rear+.6,front-.6]){
+  const lamp=new THREE.PointLight(0x238fd8,3.4,4.8);
+  lamp.position.set(0,1.65,z);scene.add(lamp);
+ }
+}
+
 function buildHunt(){
  panelWall();mainFloor();truss();studioLights();stageArch();verticalWallFrames();doorway(-7.0,-7.28,'HUNTER TUNNEL');
  for(let k=0;k<4;k++)floorChevron(-5.5+k*3.6,3.65,-1);
  for(let x of [-7.15,7.15]){ringPlatform(x,.35,1.5,1.55,1.35);seatDetail(x,.4,2.9)}
  beamFace(0,2.85,-7.01,12,.27,mDark);
- // Wide television set: raised long transparent chase table with stepped plinths.
- for(let i=0;i<3;i++){block(14-i*.8,.2,4.6-i*.52,0,.24+i*.23,-2.05,mDark);block(14-i*.8,.045,4.6-i*.52,0,.35+i*.23,-.05-i*.26,mIce)}
- block(10.8,.48,2.2,0,1.25,-1.9,mBlue);
- block(10.9,.11,2.3,0,1.56,-1.9,mGlass);
- block(10.8,.11,.17,0,1.66,-.69,mOrange);
- for(let x=-4.6;x<=4.6;x+=1.15){block(.12,.065,1.6,x,1.68,-1.9,mIce)}
+ // Original Wolfpack studio with the Chase-style longitudinal seven-step LED table.
+ // The LED playing surface runs toward the host, not across the rear of the stage.
+ buildChaseLedTable(false);
  for(let x of [-6.3,6.3]){
   cylinder(1.0,1.26,.38,x,.42,1.38,mMetal);
   cylinder(.85,.95,.28,x,.77,1.38,mOrange);
@@ -113,6 +143,7 @@ function buildWolfpack(){
   for(let j=0;j<3;j++)block(2.6,.045,.1,x,.83+j*.23,z+.69,mGold);
   if(i===6){block(2.8,.14,1.48,x,2.47,z,mWhite);light(x,4.7,z,17)}
  }
+ buildChaseLedTable(true);
  cylinder(1.65,1.8,.35,0,.24,4,mMetal);
  cylinder(1.49,1.61,.14,0,.5,4,mOrange);
  curvedDesk(0,1.8,4,2.8,'CONTESTANT');
@@ -197,11 +228,18 @@ function makeIntroLed(){
  ledSurface=document.createElement('canvas');ledSurface.width=1024;ledSurface.height=480;
  ledCtx=ledSurface.getContext('2d');ledTexture=new THREE.CanvasTexture(ledSurface);
  ledTexture.colorSpace=THREE.SRGBColorSpace;
- const screen=new THREE.Mesh(new THREE.PlaneGeometry(9.3,3.2),new THREE.MeshBasicMaterial({map:ledTexture,side:THREE.DoubleSide,transparent:false}));
- // Raise an illuminated screen from the show desk only during introductions.
- screen.position.set(0,2.83,mode==='btw'?2.55:-.42);
+ // The silhouette and animated Hunter are displayed ON the physical playing
+ // surface of the desk, exactly where the normal Chase-like track is shown.
+ const compact=mode==='btw';
+ const depth=compact?2.92:7.52,width=compact?3.42:3.65;
+ const screen=new THREE.Mesh(
+  new THREE.PlaneGeometry(width,depth),
+  new THREE.MeshBasicMaterial({map:ledTexture,side:THREE.DoubleSide,depthWrite:false})
+ );
+ screen.rotation.x=-Math.PI/2;
+ screen.position.set(0,1.468,compact?-.35:-.35);
+ screen.renderOrder=4;
  scene.add(screen);ledPanel=screen;screen.visible=false;
- block(9.6,.10,.17,0,1.19,mode==='btw'?2.57:-.40,mIce);
 }
 function introCharacter(ctx,profile,shadow,t){
  ctx.save();ctx.translate(524+Math.sin(t*1.8)*5,270);
@@ -259,7 +297,7 @@ function updateIntroductions(now){
 function render(modeValue='hunt',view='stage'){
  const el=document.getElementById('stage3d');
  if(!el){destroy();return}
- if(el===container && mode===modeValue){return;}
+ if(el===container && mode===modeValue){setView(view);return;}
  destroy();container=el;mode=modeValue;
  try{renderer=new THREE.WebGLRenderer({antialias:true,alpha:false});}catch(err){el.textContent='3D rendering unavailable on this computer: '+err.message;return}
  renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,1.5));
