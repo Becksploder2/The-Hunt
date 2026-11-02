@@ -680,8 +680,7 @@ func _setup_ui() -> void:
  panel.add_child(content)
 
 func _clear_ui() -> void:
- if countdown != null:
-  countdown.stop()
+ # Only clear presentation widgets. Never stop a live clock during question redraw.
  for child in content.get_children():
   content.remove_child(child)
   child.queue_free()
@@ -764,6 +763,8 @@ func _update_3d_screens() -> void:
   stage_clock.text=_clock_string(ceili(time_remaining))
 
 func _main_menu() -> void:
+ if countdown != null:
+  countdown.stop()
  phase="menu"
  _clear_ui()
  message="Let the Hunt Begin!"
@@ -895,6 +896,7 @@ func _start_show(chosen_mode: String) -> void:
  _builder_intro()
 
 func _builder_intro() -> void:
+ countdown.stop()
  phase="builder_intro"
  individual_money=0
  right_answers=0
@@ -906,8 +908,8 @@ func _builder_intro() -> void:
  _scoreboard()
  _button("START CASH BUILDER",func() -> void:
   phase="builder"
-  countdown.start()
   _question_screen()
+  countdown.start()
  )
  _button("MAIN MENU",_main_menu)
 
@@ -919,6 +921,7 @@ func _question() -> Array:
 var active_question: Array=[]
 func _question_screen() -> void:
  _clear_ui()
+ _update_3d_screens()
  _heading("CASH BUILDER" if phase=="builder" else "THE HUNT")
  _scoreboard()
  active_question=_question()
@@ -1057,6 +1060,7 @@ func _hunter_sits_and_speaks() -> void:
  _label(message)
 
 func _show_offers() -> void:
+ countdown.stop()
  tron_active=true
  camera.position=Vector3(0,7.4,13.8)
  camera.look_at(Vector3(0,1.3,-1.0))
