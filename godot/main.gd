@@ -108,6 +108,9 @@ var tron_glow_strips: Array[MeshInstance3D] = []
 var tron_primary: Color = RED
 var tron_accent: Color = ORANGE
 var tron_active := false
+var host_rear_screen: Node3D
+var host_rear_title: Label3D
+var uk_led_banks: Array[MeshInstance3D] = []
 var entrance_waypoints: Array[Vector3] = []
 var tilt_table: Node3D
 var walkway_phase := 0.0
@@ -394,6 +397,7 @@ func _rebuild_studio() -> void:
  tron_frames.clear()
  tron_side_lights.clear()
  tron_glow_strips.clear()
+ uk_led_banks.clear()
  tron_active=false
  marquee_lamps.clear()
  marquee_tiles.clear()
@@ -405,21 +409,18 @@ func _rebuild_studio() -> void:
  add_child(studio)
  _box(studio,Vector3(25,0.35,29),Vector3(0,-0.3,-3.8),Color("#131b27"))
  _box(studio,Vector3(25,8,0.35),Vector3(0,3.4,-14.2),Color("#111723"))
- for i in range(9):
-  var x := (float(i)-4.0)*2.6
-  _box(studio,Vector3(0.08,7.0,0.14),Vector3(x,3.1,-7.9),RED,true)
- _box(studio,Vector3(21,0.19,0.4),Vector3(0,6.45,-7.85),ORANGE,true)
+ # Clear central sightline: no floating LED bars between cameras and table.
+ _box(studio,Vector3(20,0.13,0.35),Vector3(0,6.35,-13.85),ORANGE,true)
  # Concentric overhead LED lighting rings across the studio.
  for radius in [3.0,4.5,6.0]:
   _ring(studio,radius,Vector3(0,6.10,-0.7),RED if radius==4.5 else ORANGE)
- for i in range(8):
-  var theta := float(i)*TAU/8.0
-  _box(studio,Vector3(0.10,0.075,1.1),Vector3(sin(theta)*8.2,0.03,cos(theta)*6.4-0.5),RED,true)
+ # Floor is intentionally restrained to emphasize real display walls.
  _text(studio,"THE HUNT" if mode == "hunt" else "BEAT THE WOLFPACK",Vector3(0,5.1,-7.65),125,0.007,WHITE)
- _add_stage_spectacle()
+ _build_uk_side_led_banks()
  if mode=="hunt":
   _build_lair_bridge()
   _build_hunter_titantron()
+  _build_host_rear_screen()
  else:
   _arch(studio,7.7,-7.3)
  entrance_banner=_text(studio,"HUNTER'S LAIR",Vector3(8.55,5.3,-10.9) if mode=="hunt" else Vector3(7.7,4.45,-6.52),42,0.005,WHITE)
@@ -435,9 +436,7 @@ func _rebuild_studio() -> void:
  warning_light.light_energy=0.0
  warning_light.omni_range=7
  studio.add_child(warning_light)
- # Stage light pillars and colored edges
- for x in [-10.0,-7.0,7.0,10.0]:
-  _box(studio,Vector3(0.13,5.2,0.25),Vector3(x,2.6,-7.55),BLUE,true)
+ # UK-style vertical banks now frame the outside of the set.
  for side in [-1.0,1.0]:
   var spotlight := OmniLight3D.new()
   spotlight.position=Vector3(8.2*side,5.2,1.3)
@@ -462,13 +461,43 @@ func _rebuild_studio() -> void:
  contestant_avatar.visible=false
  _update_3d_screens()
 
+func _build_uk_side_led_banks() -> void:
+ # Each slim vertical lighting bank echoes the UK studio's framing.
+ # Keep the center and the bridge completely unobstructed.
+ for side in [-1.0,1.0]:
+  for column in range(3):
+   var x:float=side*(10.65+float(column)*0.52)
+   var base:=_box(studio,Vector3(0.20,5.7,0.23),Vector3(x,2.85,-2.8),Color("#1d1926"))
+   base.name="UKSideLEDColumn"
+   for j in range(12):
+    var y:float=0.52+float(j)*0.43
+    var segment:=_box(studio,Vector3(0.14,0.28,0.30),Vector3(x,y,-2.55),RED if (j+column)%2==0 else ORANGE,true)
+    uk_led_banks.append(segment)
+
+func _build_host_rear_screen() -> void:
+ # Dedicated broadcast panel behind Arianna rather than behind the chase desk.
+ host_rear_screen=Node3D.new()
+ host_rear_screen.name="AriannaBackdropScreen"
+ host_rear_screen.position=Vector3(-8.15,0,-5.8)
+ host_rear_screen.rotation_degrees.y=12.0
+ studio.add_child(host_rear_screen)
+ _box(host_rear_screen,Vector3(5.55,3.3,0.32),Vector3(0,3.1,-0.12),Color("#13131c"))
+ _box(host_rear_screen,Vector3(5.18,2.9,0.12),Vector3(0,3.12,0.15),Color("#541b2a"),true)
+ for y in [1.55,4.70]:
+  _box(host_rear_screen,Vector3(5.7,0.1,0.25),Vector3(0,y,0.20),ORANGE,true)
+ for x in [-2.72,2.72]:
+  _box(host_rear_screen,Vector3(0.11,3.25,0.22),Vector3(x,3.13,0.20),RED,true)
+ host_rear_title=_text(host_rear_screen,"THE HUNT",Vector3(0,3.58,0.35),99,0.0061,WHITE)
+ _text(host_rear_screen,"WOLFPACK STUDIOS",Vector3(0,2.53,0.38),50,0.0041,Color("#ffcc80"))
+
 func _build_hunter_titantron() -> void:
  # Stage-left of the elevated cave, angled toward the main camera.
  hunter_tron=Node3D.new()
  hunter_tron.name="HunterTitantronRoot"
- hunter_tron.position=Vector3(3.4,0,-11.7)
- hunter_tron.rotation_degrees.y=-14.0
+ hunter_tron.position=Vector3(11.2,0,-9.45)
+ hunter_tron.rotation_degrees.y=-23.0
  studio.add_child(hunter_tron)
+ # Flat framed LED display, not an assortment of hovering title bars.
  _box(hunter_tron,Vector3(4.9,5.95,0.50),Vector3(0,3.1,-0.15),DARK)
  tron_backdrop=_box(hunter_tron,Vector3(4.42,5.38,0.10),Vector3(0,3.15,0.18),Color("#150e1c"))
  for i in range(9):
@@ -485,7 +514,7 @@ func _build_hunter_titantron() -> void:
  _text(hunter_tron,"THE HUNT  •  HUNTER INTRODUCTION",Vector3(0,5.5,0.45),39,0.004,WHITE)
  for i in range(4):
   var side:=OmniLight3D.new()
-  side.position=Vector3(3.4 + (-3.0 if i%2==0 else 3.0),1.9+float(i/2)*2.65,-10.9)
+  side.position=Vector3(11.2 + (-2.6 if i%2==0 else 2.6),1.9+float(i/2)*2.65,-8.8)
   side.light_color=RED
   side.light_energy=1.4
   side.omni_range=6.0
@@ -626,10 +655,7 @@ func _build_hunt_table() -> void:
  for i in range(13):
   var x:float=(float(i)-6.0)*1.82
   _box(studio,Vector3(0.16,6.2,0.16),Vector3(x,3.0,-13.84),RED if i%2==0 else ORANGE,true)
- for side in [-1.0,1.0]:
-  _box(studio,Vector3(0.48,5.1,12.6),Vector3(side*11.35,2.45,-1.15),Color("#211e31"))
-  for j in range(7):
-   _box(studio,Vector3(0.20,0.12,0.8),Vector3(side*11.03,0.7+float(j)*0.67,-6.2+float(j)*1.54),ORANGE if j%2==0 else RED,true)
+ # Keep the side wings open; LED columns are built separately.
 
 func _seat(position: Vector3) -> void:
  _box(studio,Vector3(0.95,0.23,0.92),position+Vector3(0,0.68,0),DARK)
