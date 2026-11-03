@@ -437,9 +437,9 @@ func _rebuild_studio() -> void:
   _build_host_rear_screen()
  else:
   _arch(studio,7.7,-7.3)
- entrance_banner=_text(studio,"",Vector3(8.55,5.3,-10.9) if mode=="hunt" else Vector3(7.7,4.45,-6.52),42,0.005,WHITE)
+ entrance_banner=_text(studio,"",Vector3(0.0,5.3,-11.0) if mode=="hunt" else Vector3(7.7,4.45,-6.52),42,0.005,WHITE)
  entrance_light=OmniLight3D.new()
- entrance_light.position=Vector3(8.6,4.0,-11.0) if mode=="hunt" else Vector3(7.7,3.0,-6.2)
+ entrance_light.position=Vector3(0.0,4.0,-11.0) if mode=="hunt" else Vector3(7.7,3.0,-6.2)
  entrance_light.light_color=RED
  entrance_light.light_energy=4.5
  entrance_light.omni_range=8
@@ -468,7 +468,7 @@ func _rebuild_studio() -> void:
  _box(host_avatar,Vector3(0.58,0.23,0.44),Vector3(0,2.50,0),Color("#b76542"))
  _text(studio,"ARIANNA DAWSON",Vector3(-9.8,3.0,-3.3),42,0.004,WHITE)
  hunter_avatar = _featured_hunter("The Professor")
- hunter_avatar.position=Vector3(8.55,1.0,-11.15) if mode=="hunt" else Vector3(7.7,0,-6.8)
+ hunter_avatar.position=entrance_waypoints[0] if mode=="hunt" else Vector3(7.7,0,-6.8)
  hunter_avatar.visible=false
  contestant_avatar = _avatar(studio,Color("#a41e31"),SKIN)
  contestant_avatar.position=Vector3(0,0,6.3)
@@ -602,24 +602,26 @@ func _bridge_segment(a: Vector3,b: Vector3,index: int) -> void:
   _box(studio,Vector3(0.22,1.05,0.22),point+Vector3(0,-0.76,0),Color("#40404a"))
 
 func _build_lair_bridge() -> void:
- # Lair is a detached high platform; bridge slopes toward the Hunter's chair.
+ # Top-down studio geography: elevated Hunter end is at rear (-Z).
+ # The lair is directly behind it, NOT on the contestant/camera side.
+ # A short central LED bridge runs forward from the rear cave to the dais.
  entrance_waypoints=[
-  Vector3(8.55,1.0,-11.15),
-  Vector3(8.55,1.0,-9.0),
-  Vector3(7.9,0.72,-6.4),
-  Vector3(6.3,0.40,-4.65),
-  Vector3(3.55,0.36,-4.40),
+  Vector3(0.0,1.0,-11.15),
+  Vector3(0.0,1.0,-9.45),
+  Vector3(0.0,0.92,-8.0),
+  Vector3(0.0,0.75,-6.62),
+  Vector3(0.0,0.75,-5.5),
   Vector3(0.0,0.75,-4.80)
  ]
- _box(studio,Vector3(5.8,1.25,4.25),Vector3(8.55,0.44,-11.3),Color("#28212b"))
- _box(studio,Vector3(5.9,0.13,4.35),Vector3(8.55,1.13,-11.3),ORANGE,true)
- _arch(studio,8.55,-12.6)
- # Cave identity is shown on the dedicated Hunter screen.
- for i in range(entrance_waypoints.size()-2):
+ _box(studio,Vector3(5.8,1.25,4.25),Vector3(0,0.44,-11.3),Color("#28212b"))
+ _box(studio,Vector3(5.9,0.13,4.35),Vector3(0,1.13,-11.3),ORANGE,true)
+ _arch(studio,0.0,-12.65)
+ # Three short lit sections end where the raised Hunter dais begins.
+ # The final two waypoints cross the dais itself; don't build a bridge
+ # across the chair or down the sloping quiz board.
+ for i in range(3):
   _bridge_segment(entrance_waypoints[i],entrance_waypoints[i+1],i)
- # Final approach is a floor-level pathway ending directly at the Hunter seat.
- _bridge_segment(entrance_waypoints[entrance_waypoints.size()-2],entrance_waypoints.back(),4)
- # Bridge edge lighting supplies the entrance path; omit extra cave poles.
+
 
 func _build_hunt_table() -> void:
  # Chase-style show geometry adapted for The Hunt: long, narrow, seven-zone
@@ -658,10 +660,10 @@ func _build_hunt_table() -> void:
  _box(studio,Vector3(6.6,1.2,0.22),Vector3(0,1.0,4.27),DARK)
  _box(studio,Vector3(6.72,0.11,0.25),Vector3(0,1.59,4.30),ORANGE,true)
  table_prize=_text(studio,"TEAM PRIZE   $0",Vector3(0,1.05,4.42),69,0.0062,WHITE)
- _box(studio,Vector3(8.5,1.9,0.3),Vector3(0,4.3,-13.9),DARK)
- _box(studio,Vector3(8.62,0.11,0.36),Vector3(0,5.27,-13.9),RED,true)
- _box(studio,Vector3(8.62,0.11,0.36),Vector3(0,3.33,-13.9),ORANGE,true)
- prize_label=_text(studio,"TEAM PRIZE   $0",Vector3(0,4.32,-13.66),75,0.0076,WHITE)
+ _box(studio,Vector3(6.0,1.75,0.3),Vector3(-6.25,4.35,-14.05),DARK)
+ _box(studio,Vector3(6.1,0.11,0.36),Vector3(-6.25,5.25,-14.05),RED,true)
+ _box(studio,Vector3(6.1,0.11,0.36),Vector3(-6.25,3.45,-14.05),ORANGE,true)
+ prize_label=_text(studio,"TEAM PRIZE   $0",Vector3(-6.25,4.35,-13.82),67,0.0065,WHITE)
  _box(studio,Vector3(3.75,1.7,0.18),Vector3(-6.5,2.75,4.15),DARK)
  _box(studio,Vector3(3.84,0.12,0.22),Vector3(-6.5,3.64,4.15),RED,true)
  stage_clock=_text(studio,"02:00",Vector3(-6.5,2.75,4.35),111,0.0079,WHITE)
@@ -1190,10 +1192,10 @@ func _walk_out(hunter: String) -> void:
  entrance_banner.text=hunter.to_upper() if entrance_banner != null else "HUNTER"
  if entrance_light != null:
   entrance_light.light_energy=8.0
- camera.position=Vector3(10.4,5.0,-7.2) if mode=="hunt" else Vector3(9.0,3.4,1.2)
+ camera.position=Vector3(5.8,4.8,-5.7) if mode=="hunt" else Vector3(9.0,3.4,1.2)
  camera.look_at(hunter_avatar.position+Vector3(0,1.9,0))
  music_director.play_entrance(hunter,mode)
- _text(studio,hunter.to_upper(),Vector3(0,4.1,-3.8),60,0.006,ORANGE)
+ # The titantron handles the on-stage Hunter name: no floating label.
 
 func _process(delta: float) -> void:
  _animate_stage_lights(delta)
@@ -1210,7 +1212,7 @@ func _process(delta: float) -> void:
    hunter_avatar.position=entrance_waypoints[index].lerp(entrance_waypoints[index+1],fraction)
    var heading:Vector3=entrance_waypoints[index+1]-entrance_waypoints[index]
    hunter_avatar.rotation.y=atan2(heading.x,heading.z)+PI
-   var over_bridge:=Vector3(10.2,5.7,-7.2).lerp(Vector3(4.7,3.8,4.1),ease)
+   var over_bridge:=Vector3(5.8,4.8,-5.7).lerp(Vector3(4.7,3.8,3.0),ease)
    camera.position=over_bridge
   else:
    hunter_avatar.position=Vector3(7.7,0,-6.8).lerp(hunter_target,ease)
