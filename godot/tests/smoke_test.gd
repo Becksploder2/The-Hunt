@@ -107,6 +107,20 @@ func _verify() -> void:
  if route.size()<5 or bridge.size()<10:
   _fail("Detached cave bridge and waypoint walkout are missing")
   return
+ # Hunt's cave must be centered behind the raised Hunter end, never at the
+ # low/contestant side or out on the old right-hand entrance wing.
+ var lair_start: Vector3=route[0]
+ var hunter_end: Vector3=route[route.size()-1]
+ if absf(lair_start.x)>0.2 or lair_start.z>=hunter_end.z-4.0:
+  _fail("Hunter lair must be centered behind the elevated end of the table")
+  return
+ for i in range(route.size()-1):
+  if route[i+1].z<=route[i].z:
+   _fail("Hunter path must move forward from the rear cave to the table")
+   return
+ if absf(hunter_end.x)>0.2 or hunter_end.z>=-3.0:
+  _fail("Hunter entrance must finish at the raised table end")
+  return
  var sloped: Node3D=game.get("tilt_table")
  if sloped==null or sloped.rotation_degrees.x<14.0 or sloped.position.z<0.5:
   _fail("Chase-style tilted quiz table missing")
