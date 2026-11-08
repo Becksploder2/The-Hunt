@@ -3,7 +3,7 @@ extends Control
 signal entrance_theme_changed(mode: String, character: String, path: String)
 
 const MODES := ["The Hunt", "Beat the Wolfpack"]
-const CHARACTERS := ["Arianna Dawson", "The Professor", "The Red Raider", "El Jefe", "The Jet", "The Girl Genius", "The Warden", "The Raven"]
+const CHARACTERS := ["Arianna Dawson", "The Professor", "The Red Raider", "El Jefe", "The Jet", "The Girl Genius", "The Warden", "The Raven", "Raven Defeated - Victory March"]
 const EXTENSIONS := ["mp3", "ogg", "wav"]
 const STORE := "user://entrance_themes"
 const AUDIO_SETTINGS := "user://audio_settings.cfg"
@@ -44,7 +44,7 @@ func _ready() -> void:
     layout.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
     add_child(layout)
     var title := Label.new()
-    title.text = "Entrance Music — The Hunt / Beat the Wolfpack"
+    title.text = "Entrance & Victory Music — The Hunt / Beat the Wolfpack"
     layout.add_child(title)
     mode_picker = OptionButton.new()
     for mode in MODES:
@@ -79,6 +79,10 @@ func _ready() -> void:
     volume_slider.max_value = 1.0
     volume_slider.step = 0.05
     volume_slider.value = _saved_volume()
+    var hint := Label.new()
+    hint.text = "To celebrate defeating The Raven: select The Hunt, then Raven Defeated - Victory March. Import your recording here."
+    hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+    layout.add_child(hint)
     var volume_label := Label.new()
     volume_label.text = "Hunter entrance music volume (saved automatically)"
     layout.add_child(volume_label)
