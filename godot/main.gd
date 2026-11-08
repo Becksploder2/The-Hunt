@@ -150,6 +150,8 @@ var status_label: Label
 var timer_label: Label
 var cash_label: Label
 var headline: Label
+var victory_confetti: Node3D
+var raven_defeated_celebration := false
 var answer_cues: Node
 var music_director: Node
 var music_importer: Control
@@ -951,6 +953,12 @@ func _update_3d_screens() -> void:
   stage_clock.text=_clock_string(ceili(time_remaining))
 
 func _main_menu() -> void:
+ raven_defeated_celebration=false
+ if victory_confetti!=null and is_instance_valid(victory_confetti):
+  victory_confetti.queue_free()
+  victory_confetti=null
+ if music_director!=null:
+  music_director.stop_entrance()
  if countdown != null:
   countdown.stop()
  phase="menu"
@@ -1068,6 +1076,10 @@ func _load_contestants() -> void:
    contestant_styles[i].merge(saved,true)
 
 func _start_show(chosen_mode: String) -> void:
+ raven_defeated_celebration=false
+ if victory_confetti!=null and is_instance_valid(victory_confetti):
+  victory_confetti.queue_free()
+  victory_confetti=null
  mode=chosen_mode
  contestant_index=0
  answer_number=0
@@ -1449,13 +1461,59 @@ func _btw_duel() -> void:
     _btw_duel()
  )
 
+func _start_raven_victory_celebration() -> void:
+ # A Wolfpack-colored confetti shower is unique to beating The Raven.
+ # The celebration overlays the actual studio; no replacement backdrop.
+ if victory_confetti != null and is_instance_valid(victory_confetti):
+  victory_confetti.queue_free()
+ victory_confetti=Node3D.new()
+ victory_confetti.name="RavenDefeatedConfetti"
+ studio.add_child(victory_confetti)
+ for color in [Color("#ec263f"),Color("#ffb547"),Color("#f8f4ed")]:
+  var rain:=CPUParticles3D.new()
+  rain.name="Confetti_%s" % color.to_html(false)
+  rain.position=Vector3(0,6.5,-1.5)
+  rain.emitting=false
+  rain.amount=135
+  rain.lifetime=5.5
+  rain.one_shot=false
+  rain.explosiveness=0.0
+  rain.local_coords=false
+  rain.emission_shape=CPUParticles3D.EMISSION_SHAPE_BOX
+  rain.emission_box_extents=Vector3(8.2,0.12,5.4)
+  rain.direction=Vector3(0,-1,0)
+  rain.spread=38.0
+  rain.gravity=Vector3(0,-3.7,0)
+  rain.initial_velocity_min=0.8
+  rain.initial_velocity_max=2.0
+  var sheet:=QuadMesh.new()
+  sheet.size=Vector2(0.13,0.22)
+  var paper:=StandardMaterial3D.new()
+  paper.albedo_color=color
+  paper.shading_mode=BaseMaterial3D.SHADING_MODE_UNSHADED
+  paper.cull_mode=BaseMaterial3D.CULL_DISABLED
+  sheet.material=paper
+  rain.mesh=sheet
+  victory_confetti.add_child(rain)
+  rain.emitting=true
+ camera.position=Vector3(0,7.1,16.4)
+ camera.look_at(Vector3(0,2.1,-2.4))
+ studio_burst=1.0
+ music_director.play_entrance("Raven Defeated - Victory March","hunt")
+
 func _show_result(won: bool) -> void:
+ var defeated_raven:bool=won and mode=="hunt" and phase=="final_raven"
  countdown.stop()
  music_director.stop_entrance()
  phase="result"
  _clear_ui()
- message="VICTORY!" if won else "THE WOLFPACK WINS."
+ raven_defeated_celebration=defeated_raven
+ message="THE RAVEN HAS BEEN DEFEATED!" if defeated_raven else "VICTORY!" if won else "THE WOLFPACK WINS."
  _heading(message)
  _label("Prize awarded: $"+_money(team_money if won else 0))
  _button("PLAY AGAIN",_main_menu)
- _show_dialogue("Arianna Dawson",["Congratulations!" if won else "The Wolfpack takes this one.","That's the end of the Hunt."])
+ if defeated_raven:
+  _start_raven_victory_celebration()
+  _show_dialogue("Arianna Dawson",["THE RAVEN HAS BEEN DEFEATED!","The team has done it!","The Hunt is over — and the prize is theirs!"])
+ else:
+  _show_dialogue("Arianna Dawson",["Congratulations!" if won else "The Wolfpack takes this one.","That's the end of the Hunt."])
