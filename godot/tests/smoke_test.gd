@@ -143,6 +143,35 @@ func _verify() -> void:
  if board.size() != 7:
   _fail("Seven-step LED table tracker is missing")
   return
+ # A routine success must not play the final Raven-defeat celebration.
+ game.call("_show_result",true)
+ await process_frame
+ if bool(game.get("raven_defeated_celebration")) or game.get("victory_confetti")!=null:
+  _fail("Ordinary victory incorrectly triggered the final Raven confetti")
+  return
+ # Only winning after the Raven's final clock expires activates the finale.
+ game.set("phase","final_raven")
+ game.call("_show_result",true)
+ await process_frame
+ if not bool(game.get("raven_defeated_celebration")):
+  _fail("Defeating The Raven did not trigger the celebration")
+  return
+ var confetti: Node3D=game.get("victory_confetti")
+ if confetti==null or confetti.get_child_count()!=3:
+  _fail("Raven defeat confetti shower missing its three color emitters")
+  return
+ for effect in confetti.get_children():
+  if not (effect is CPUParticles3D) or not effect.emitting:
+   _fail("Raven confetti shower is not active")
+   return
+ if not str(game.get("message")).contains("RAVEN HAS BEEN DEFEATED"):
+  _fail("Raven defeat victory announcement missing")
+  return
+ game.call("_main_menu")
+ await process_frame
+ if bool(game.get("raven_defeated_celebration")):
+  _fail("Raven celebration stayed active after returning to menu")
+  return
  game.call("_start_show", "btw")
  await process_frame
  if game.get("phase") != "builder_intro":
